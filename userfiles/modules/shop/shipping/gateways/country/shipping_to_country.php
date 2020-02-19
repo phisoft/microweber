@@ -148,6 +148,106 @@ class shipping_to_country
             }
 
 
+        } else if (isset($shipping_country['shipping_type']) and $shipping_country['shipping_type'] == 'conditional_weight_peninsular') {
+            $total_shipping_weight = 0;
+
+            $items_cart_count = $this->app->shop_manager->cart_sum(false);
+            if ($items_cart_count > 0) {
+                $items_items = $this->app->shop_manager->get_cart();
+                if (!empty($items_items)) {
+                    foreach ($items_items as $item) {
+                        if (!isset($item['content_data'])) {
+                            $item['content_data'] = array();
+                        }
+
+                        $content_data = $item['content_data'];
+
+
+                        if (!isset($content_data['is_free_shipping']) or $content_data['is_free_shipping'] != 'y') {
+
+                            if (isset($content_data['additional_shipping_cost']) and intval($content_data['additional_shipping_cost']) > 0) {
+
+                                $volume = floatval($content_data['additional_shipping_cost']) * intval($item['qty']);
+
+                                $defined_cost = $defined_cost + $volume;
+
+                            } else {
+                                if (isset($content_data['shipping_weight']) and $content_data['shipping_weight'] != '') {
+                                    $weight = floatval($content_data['shipping_weight']);
+                                    $weight = $weight * intval($item['qty']);
+                                    $total_shipping_weight = $total_shipping_weight + $weight;
+
+                                }
+
+                            }
+                        }
+
+
+                    }
+                }
+            }
+
+
+            if (isset($shipping_country['shipping_price_per_weight']) and trim($shipping_country['shipping_price_per_weight']) != '') {
+                if ($total_shipping_weight <= 10) {
+                    $calc = floatval($shipping_country['shipping_price_per_weight']);
+                    $calc2 = $calc * ceil($total_shipping_weight - 1);
+            
+                }
+                else{
+                    $calc = floatval($shipping_country['shipping_price_per_weight']);
+                    $calc2 = $calc * ceil($total_shipping_weight - 10);
+                    $defined_cost = $defined_cost + $calc2;
+                }
+
+            }
+
+
+        } else if (isset($shipping_country['shipping_type']) and $shipping_country['shipping_type'] == 'conditional_weight_sabah_sarawak') {
+            $total_shipping_weight = 0;
+
+            $items_cart_count = $this->app->shop_manager->cart_sum(false);
+            if ($items_cart_count > 0) {
+                $items_items = $this->app->shop_manager->get_cart();
+                if (!empty($items_items)) {
+                    foreach ($items_items as $item) {
+                        if (!isset($item['content_data'])) {
+                            $item['content_data'] = array();
+                        }
+
+                        $content_data = $item['content_data'];
+
+
+                        if (!isset($content_data['is_free_shipping']) or $content_data['is_free_shipping'] != 'y') {
+
+                            
+                                if (isset($content_data['shipping_weight']) and $content_data['shipping_weight'] != '') {
+                                    $weight = floatval($content_data['shipping_weight']);
+                                    $weight = $weight * intval($item['qty']);
+                                    $total_shipping_weight = $total_shipping_weight + $weight;
+
+                                }
+
+                            
+                        }
+
+
+                    }
+                }
+            }
+
+
+            if (isset($shipping_country['shipping_price_per_weight']) and trim($shipping_country['shipping_price_per_weight']) != '') {
+                if ($total_shipping_weight > 1) {
+                    $calc = floatval($shipping_country['shipping_price_per_weight']);
+                    $calc2 = $calc * ceil($total_shipping_weight);
+                    $defined_cost = $defined_cost + $calc2;
+                }
+
+            }
+
+
+
         } else if (isset($shipping_country['shipping_type']) and $shipping_country['shipping_type'] == 'per_item') {
             if (isset($shipping_country['shipping_price_per_item']) and intval($shipping_country['shipping_price_per_item']) != 0) {
 

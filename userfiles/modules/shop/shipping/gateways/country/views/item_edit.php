@@ -78,13 +78,30 @@ if ($weight_units == false) {
             if ($(this).val() == 'dimensions') {
                 mw.$(".shipping_dimensions", parent).show()
                 mw.$(".shipping_per_item", parent).hide()
+                mw.$(".shipping_conditional_weight_peninsular", parent).hide()
+                mw.$(".shipping_conditional_weight_sabah_sarawak", parent).hide()
             } else if ($(this).val() == 'per_item') {
                 mw.$(".shipping_dimensions", parent).hide()
                 mw.$(".shipping_per_item", parent).show()
+                mw.$(".shipping_conditional_weight_peninsular", parent).hide()
+                mw.$(".shipping_conditional_weight_sabah_sarawak", parent).hide()
 
+            } else if ($(this).val() == 'conditional_weight_peninsular') {
+                mw.$(".shipping_dimensions", parent).hide()
+                mw.$(".shipping_per_item", parent).hide()
+                mw.$(".shipping_conditional_weight_peninsular", parent).show()
+                mw.$(".shipping_conditional_weight_sabah_sarawak", parent).hide()
+
+            } else if ($(this).val() == 'conditional_weight_sabah_sarawak') {
+                mw.$(".shipping_dimensions", parent).hide()
+                mw.$(".shipping_per_item", parent).hide()
+                mw.$(".shipping_conditional_weight_peninsular", parent).hide()
+                mw.$(".shipping_conditional_weight_sabah_sarawak", parent).show()
             } else {
                 mw.$(".shipping_dimensions", parent).hide()
                 mw.$(".shipping_per_item", parent).hide()
+                mw.$(".shipping_conditional_weight_peninsular", parent).hide()
+                mw.$(".shipping_conditional_weight_sabah_sarawak", parent).hide()
 
             }
         });
@@ -96,13 +113,31 @@ if ($weight_units == false) {
             if ($(this).val() == 'dimensions') {
                 mw.$(".shipping_dimensions", parent).slideDown()
                 mw.$(".shipping_per_item", parent).hide()
+                mw.$(".shipping_conditional_weight_peninsular", parent).hide()
+                mw.$(".shipping_conditional_weight_sabah_sarawak", parent).hide()
 
             } else if ($(this).val() == 'per_item') {
                 mw.$(".shipping_dimensions", parent).hide()
                 mw.$(".shipping_per_item", parent).show()
+                mw.$(".shipping_conditional_weight_peninsular", parent).hide()
+                mw.$(".shipping_conditional_weight_sabah_sarawak", parent).hide()
+
+            } else if ($(this).val() == 'conditional_weight_peninsular') {
+                mw.$(".shipping_dimensions", parent).hide()
+                mw.$(".shipping_per_item", parent).hide()
+                mw.$(".shipping_conditional_weight_peninsular", parent).slideDown()
+                mw.$(".shipping_conditional_weight_sabah_sarawak", parent).hide()
+
+            } else if ($(this).val() == 'conditional_weight_sabah_sarawak') {
+                mw.$(".shipping_dimensions", parent).hide()
+                mw.$(".shipping_per_item", parent).hide()
+                mw.$(".shipping_conditional_weight_peninsular", parent).hide()
+                mw.$(".shipping_conditional_weight_sabah_sarawak", parent).slideDown()
             } else {
                 mw.$(".shipping_dimensions", parent).slideUp()
                 mw.$(".shipping_per_item", parent).hide()
+                mw.$(".shipping_conditional_weight_peninsular", parent).slideUp()
+                mw.$(".shipping_conditional_weight_sabah_sarawak", parent).slideUp()
 
             }
         });
@@ -317,6 +352,12 @@ if ($weight_units == false) {
                                     <option value="per_item" <?php if (isset($item['shipping_type']) and 'per_item' == trim($item['shipping_type'])): ?>   selected="selected" <?php endif; ?>>
                                         <?php _e("Per item"); ?>
                                     </option>
+                                    <option value="conditional_weight_peninsular" <?php if (isset($item['shipping_type']) and 'conditional_weight_peninsular' == trim($item['shipping_type'])): ?>   selected="selected" <?php endif; ?>>
+                                        <?php _e("Conditional Weight - Peninsular"); ?>
+                                    </option>
+                                    <option value="conditional_weight_sabah_sarawak" <?php if (isset($item['shipping_type']) and 'conditional_weight_sabah_sarawak' == trim($item['shipping_type'])): ?>   selected="selected" <?php endif; ?>>
+                                        <?php _e("Conditional Weight - sabah&sarawak"); ?>
+                                    </option>
                                 </select>
                             </div>
                         </div>
@@ -367,6 +408,65 @@ if ($weight_units == false) {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="shipping_conditional_weight_peninsular m-t-10" style="display: none">
+                        <div class="mw-ui-row">
+                            <div class=" mw-ui-col">
+                                <div class="mw-ui-field-holder">
+                                    <label class="mw-ui-label"><?php _e("Shipping cost 1-10 Kg"); ?></label>
+
+                                    <div class="shipping-cost">
+                                        <div class="mw-ui-btn-nav input-with-currency">
+                                            <a href="javascript:;" class="mw-ui-btn mw-ui-btn-outline"><?php print mw()->shop_manager->currency_symbol() ?></a>
+                                            <input class="mw-ui-field shipping-price-field price-field" type="text" onkeyup="mw.form.typeNumber(this);" onchange="SaveShippingForm()" placeholder="0" name="shipping_cost" value="<?php print $item['shipping_cost']; ?>"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mw-ui-col">
+                                <div class="mw-ui-field-holder">
+                                    <label class="mw-ui-label">
+                                        <?php _e("Additional cost for"); ?>
+                                        <em>1 <?php print $weight_units ?></em>
+                                    </label>
+                                    <span class="mwsico-usd"></span>
+                                    <div class="input-with-currency">
+                                        <div class="input-with-currency">
+                                            <div class="mw-ui-btn-nav input-with-currency">
+                                                <a href="javascript:;" class="mw-ui-btn mw-ui-btn-outline"><?php print mw()->shop_manager->currency_symbol() ?></a>
+                                                <input type="text" name="shipping_price_per_weight" value="<?php print floatval($item['shipping_price_per_weight']); ?>" onchange="SaveShippingForm();" class="mw-ui-field price-field"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            
+                        </div>
+                    </div>
+
+                    <div class="shipping_conditional_weight_sabah_sarawak m-t-10" style="display: none">
+                        <div class="mw-ui-row">
+                            <div class="mw-ui-col">
+                                    <div class="mw-ui-field-holder">
+                                        <label class="mw-ui-label">
+                                            <?php _e("Shipping Cost for "); ?>
+                                            <em>1 <?php print $weight_units ?></em>
+                                        </label>
+                                        <span class="mwsico-usd"></span>
+                                        <div class="input-with-currency">
+                                            <div class="input-with-currency">
+                                                <div class="mw-ui-btn-nav input-with-currency">
+                                                    <a href="javascript:;" class="mw-ui-btn mw-ui-btn-outline"><?php print mw()->shop_manager->currency_symbol() ?></a>
+                                                    <input type="text" name="shipping_price_per_weight" value="<?php print floatval($item['shipping_price_per_weight']); ?>" onchange="SaveShippingForm();" class="mw-ui-field price-field"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                         </div>
                     </div>
 

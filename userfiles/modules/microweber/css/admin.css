@@ -5943,6 +5943,20 @@ html[dir="rtl"] #upload-icoimage {
         padding: 0 !important;
     }
 
+    .mw-shipping-items .shipping_conditional_weight_peninsular .pull-left {
+        display: block;
+        width: 100%;
+        margin-bottom: 0px;
+        padding: 0 !important;
+    }
+
+    .mw-shipping-items .shipping_conditional_weight_sabah_sarawak .pull-left {
+        display: block;
+        width: 100%;
+        margin-bottom: 0px;
+        padding: 0 !important;
+    }
+
     .mw-shipping-items td {
         border: 0;
     }
@@ -5984,6 +5998,36 @@ html[dir="rtl"] #upload-icoimage {
     }
 
     .mw-shipping-items .shipping_dimensions .pull-left:nth-child(2) {
+        margin-bottom: 10px;
+    }
+
+    .mw-shipping-items .shipping_conditional_weight_peninsular .pull-left {
+        display: block;
+        width: 100%;
+        margin-bottom: 0px;
+        padding: 0 !important;
+    }
+
+    .mw-shipping-items .shipping_conditional_weight_peninsular .pull-left .mw-ui-label {
+        padding: 0;
+    }
+
+    .mw-shipping-items .shipping_conditional_weight_peninsular .pull-left:nth-child(2) {
+        margin-bottom: 10px;
+    }
+
+    .mw-shipping-items .shipping_conditional_weight_sabah_sarawak .pull-left {
+        display: block;
+        width: 100%;
+        margin-bottom: 0px;
+        padding: 0 !important;
+    }
+
+    .mw-shipping-items .shipping_conditional_weight_sabah_sarawak .mw-ui-label {
+        padding: 0;
+    }
+
+    .mw-shipping-items .shipping_conditional_weight_sabah_sarawak .pull-left:nth-child(2) {
         margin-bottom: 10px;
     }
 

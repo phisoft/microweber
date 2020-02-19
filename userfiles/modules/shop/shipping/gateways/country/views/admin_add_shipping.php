@@ -161,6 +161,10 @@
         </li>
         <li><strong><?php _e("Dimensions or Weight"); ?></strong>
             - <?php _e("Set a flexible shipping price depending on a product’s dimensions or weight"); ?></li>
+        <li><strong><?php _e("Conditional weight - Peninsular"); ?></strong>
+            - <?php _e("Set a shipping price for 1- 10 kg"); ?></li>
+        <li><strong><?php _e("Conditional weight - sabah&sarawak"); ?></strong>
+            - <?php _e("Set a shipping price per kg"); ?></li>
         <li><strong><?php _e("Per item"); ?></strong>
             -<?php _e("Charge a set shipping price for each product a customer orders"); ?></li>
     </ol>
