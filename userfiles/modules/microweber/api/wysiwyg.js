@@ -1198,6 +1198,9 @@ mw.wysiwyg = {
             if(e && e.target) {
                 mw.wysiwyg.check_selection(e.target);
             }
+            if(mw.liveEditDomTree){
+                mw.liveEditDomTree.autoSync(e.target, e.target)
+            }
 
         });
     },
@@ -1237,7 +1240,7 @@ mw.wysiwyg = {
             if(mw.tools.hasClass(el, 'edit') || mw.tools.hasClass(parent, 'edit')) {
 
             } else {
-                mw.liveEditDomTree.autoSync(parent, el);
+
 
             }
 
@@ -1741,7 +1744,7 @@ mw.wysiwyg = {
             options: {
                 target: true,
                 text: true,
-                controllers: 'page, custom, content, section, layout, email',
+                controllers: 'page, custom, content, section, layout, email, file',
                 values: {
                     url: url,
                     text: text,
@@ -2078,7 +2081,7 @@ mw.wysiwyg = {
             }
         });
     },
-    fontIconFamilies: ['fa', 'mw-ui-icon', 'mw-icon', 'material-icons', 'mw-wysiwyg-custom-icon', 'icon'],
+    fontIconFamilies: ['fas', 'fab', 'far', 'fa', 'mw-ui-icon', 'mw-icon', 'material-icons', 'mw-wysiwyg-custom-icon', 'icon'],
 
     elementHasFontIconClass: function (el) {
         var icon_classes = mw.wysiwyg.fontIconFamilies;
