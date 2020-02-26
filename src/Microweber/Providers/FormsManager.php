@@ -499,8 +499,8 @@ class FormsManager
             $notif['rel_type'] = 'forms_data';
             $notif['rel_id'] = $save;
             $notif['title'] = 'New form entry';
-            $notif['description'] = $email_notification_subject ?: 'You have new form entry';
-            $notif['content'] = 'You have new form entry from ' . $this->app->url_manager->current(1) . '<br />' . $this->app->format->array_to_ul($pp_arr);
+            $notif['description'] = $email_notification_subject ?: 'New Form Entry';
+            $notif['content'] =  $this->app->format->array_to_tables($pp_arr);
             $this->app->notifications_manager->save($notif);
 
             if ($email_to == false) {

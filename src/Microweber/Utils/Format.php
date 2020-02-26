@@ -71,6 +71,34 @@ class Format
         }
     }
 
+    public function array_to_tables($arr)
+    {
+        $table = '<table cellpadding="10"
+        style="background-color:#eee;
+        width: min-content;">';
+        $table .= '<th colspan="2" style="background-color:#2e3e99; padding:20px;"><h1><img style="max-width: 100%; width: 122px;justify-content: start;
+        display: flex;"
+        src="http://mitssolutions.asia/userfiles/media/mitssolutions.asia/mitssolutions_white_3.png"></h1></th>';
+        foreach($arr as $k=>$v) {
+            $k = str_replace('_', ' ', $k);
+            $k = ucwords($k);
+            $table .= '<tr>
+                <td style="
+                padding-right: 100px;
+                border-bottom: 1px solid silver;
+                text-align: left;
+                font-weight: bold;
+                 border-bottom: 1px solid silver;">'.$k.'</td>
+                <td style="
+                padding-right: 100px;
+                border-bottom: 1px solid silver;
+                text-align: left; ">'.$v.'</td>
+            </tr>';
+        }
+
+        return $table.'</table>';
+    }
+
     function array_to_table($array, $table = true)
     {
         $out = '';
