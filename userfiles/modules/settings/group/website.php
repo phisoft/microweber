@@ -1,6 +1,18 @@
 <?php only_admin_access(); ?>
 <script type="text/javascript">
     $(document).ready(function () {
+        mw.options.form('.js-permalink-edit-option-hook', function () {
+
+            mw.clear_cache();
+
+            mw.notification.success("Permalink changes updated.");
+        });
+    });
+</script>
+
+
+<script type="text/javascript">
+    $(document).ready(function () {
         mw.options.form('.<?php print $config['module_class'] ?>', function () {
             mw.notification.success("<?php _ejs("All changes are saved"); ?>.");
         });
@@ -91,6 +103,31 @@
                     print '<option selected="selected" value="' . $per_page . '">' . $per_page . '</option>';
                 }
                 ?>
+            </select>
+        </div>
+
+
+
+
+
+
+        <div class="mw-ui-field-holder js-permalink-edit-option-hook"  >
+            <label class="mw-ui-label">
+                <?php _e("Permalink Settings"); ?>
+                <br />
+                <small>Choose the URL posts & page format.</small>
+            </label>
+
+            <?php $permalinkStructures = mw()->permalink_manager->getStructures(); ?>
+
+            <?php $currentPremalinkStructure = get_option('permalink_structure', 'website'); ?>
+            <b><?php echo mw()->url_manager->site_url(); ?></b>
+            <select name="permalink_structure" class="mw-ui-field mw_option_field" option-group="website">
+                <?php if (is_array($permalinkStructures)): ?>
+                    <?php foreach ($permalinkStructures as $structureKey=>$structureVal): ?>
+                        <option value="<?php print $structureKey ?>" <?php if ($currentPremalinkStructure == $structureKey): ?> selected="selected" <?php endif; ?>><?php print $structureVal ?></option>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </select>
         </div>
 

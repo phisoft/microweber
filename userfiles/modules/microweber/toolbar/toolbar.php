@@ -18,7 +18,7 @@ if (isset($_COOKIE['mw_exp'])) {
     <script src="<?php print(mw_includes_url()); ?>api/libs/rangy/rangy-cssclassapplier.js"></script>
     <script src="<?php print(mw_includes_url()); ?>api/libs/rangy/rangy-selectionsaverestore.js"></script>
     <script src="<?php print(mw_includes_url()); ?>api/libs/rangy/rangy-serializer.js"></script>
-    <script src="<?php print(mw_includes_url()); ?>api/jquery-ui.js"></script>
+    <script type="text/javascript">mw.lib.require("jqueryui");</script>
 
     <script type="text/javascript">
         mw.settings.liveEdit = true;
@@ -319,7 +319,7 @@ if (isset($_COOKIE['mw_exp'])) {
                 <div class="toolbar-sections-tabs">
                     <ul>
                         <li class="create-content-dropdown">
-                            <a href="javascript:;" class="tst-logo" title="Microweber">
+                            <a href="javascript:;" class="tst-logo" title="<?php print addslashes(mw()->ui->brand_name()) ?>">
                                 <?php if (mw()->ui->logo_live_edit != false) : ?>
                                     <span class="white-label-logo" style="background-image:url('<?php print mw()->ui->logo_live_edit ?>');"></span>
                                 <?php else: ?>

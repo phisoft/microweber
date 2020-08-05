@@ -21,7 +21,8 @@ class TemplateMetaTagsRenderer
 
         if (isset($params['layout'])) {
             $layout = $params['layout'];
-
+            $meta_content_id = 0;
+            $meta_category_id = 0;
             $l = $layout;
             $meta = array();
             $meta['content_image'] = '';
@@ -41,14 +42,81 @@ class TemplateMetaTagsRenderer
                     $meta_content_id = CONTENT_ID;
                 }
             }
+            if(POST_ID == 0){
 
-            if ($meta_content_id > 0) {
+                if (isset($params['category_id']) and $params['category_id']) {
+                    $meta_category_id = $params['category_id'];
+                } else {
+                     if (CATEGORY_ID > 0) {
+                         $meta_category_id = CATEGORY_ID;
+                    }
+                }
+            }
+
+
+            $meta_tags_override = array();
+            $event_data = array();
+            if ($meta_category_id > 0) {
+                $event_data['rel_id'] = $meta_category_id;
+                $event_data['rel_type'] = 'category';
+            } else if ($meta_content_id > 0) {
+                $event_data['rel_id'] = $meta_content_id;
+                $event_data['rel_type'] = 'content';
+            }
+
+            $override = $this->app->event_manager->trigger('mw.meta_tags.render', $event_data);
+            if ($override and is_array($override) && !empty($override)) {
+                foreach ($override as $override_items){
+                    if(is_array($override_items)){
+                    $meta_tags_override = array_merge($meta_tags_override,$override_items);
+                    }
+
+                }
+            }
+
+
+            if ($meta_category_id > 0) {
+                $meta_category_data = $this->app->category_manager->get_by_id($meta_category_id);
+
+                $meta['title'] = $meta_category_data['title'];
+                $meta['description'] = $meta_category_data['description'];
+                if (isset($meta_category_data['category_meta_title']) and $meta_category_data['category_meta_title'] != '') {
+                    $meta['title'] = $meta_category_data['category_meta_title'];
+                }
+                if (isset($meta_category_data['category_meta_description']) and $meta_category_data['category_meta_description'] != '') {
+                    $meta['description'] = $meta_category_data['category_meta_description'];
+                }
+
+                if (isset($meta_category_data['category_meta_keywords']) and $meta_category_data['category_meta_keywords'] != '') {
+                    $meta['content_meta_keywords'] = $meta_category_data['category_meta_keywords'];
+                }
+                $meta['og_description'] = $meta['description'];
+
+                $content_image = $this->app->media_manager->get_picture($meta_category_id,'category');
+                if ($content_image) {
+                    $meta['content_image'] = $content_image;
+                    $meta['og_image'] = $content_image;
+                 }
+            } else if ($meta_content_id > 0) {
                 $meta = $this->app->content_manager->get_by_id($meta_content_id);
                 $content_image = $this->app->media_manager->get_picture($meta_content_id);
                 if ($content_image) {
                     $meta['content_image'] = $content_image;
                 } else {
                     $meta['content_image'] = '';
+                    $cont_id = get_content_by_id($meta_content_id);
+
+                    if ($cont_id and isset($cont_id['content'])) {
+                        $img = $this->app->media_manager->get_first_image_from_html(html_entity_decode($cont_id['content']));
+
+                        if ($img != false) {
+                            $surl = $this->app->url_manager->site();
+                            $img = $this->app->format->replace_once('{SITE_URL}', $surl, $img);
+                            $meta['content_image'] = $img;
+                        }
+                    }
+
+
                 }
                 $meta['content_url'] = $this->app->content_manager->link($meta_content_id);
                 if (isset($meta['content_type'])) {
@@ -112,6 +180,12 @@ class TemplateMetaTagsRenderer
                     $meta['content_meta_keywords'] = $this->app->option_manager->get('website_keywords', 'website');
                 }
                 if (is_array($meta)) {
+
+                    if(is_array($meta_tags_override) and !empty($meta_tags_override)){
+                        $meta = array_merge($meta,$meta_tags_override);
+                    }
+
+
                     foreach ($meta as $key => $item) {
                         if (is_string($item)) {
                             $item = html_entity_decode($item);

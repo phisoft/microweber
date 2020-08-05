@@ -16,7 +16,7 @@ if (! defined('MW_VERSION')) {
 class MicroweberServiceProvider extends ServiceProvider
 {
     protected $aliasInstance;
-    
+
     /*
     * Application Service Providers...
     */
@@ -195,10 +195,6 @@ class MicroweberServiceProvider extends ServiceProvider
             return new Utils\Http($app);
         });
 
-        $this->app->bind('captcha', function ($app) {
-            return new Utils\Captcha($app);
-        });
-
         $this->app->singleton('format', function ($app) {
             return new Utils\Format($app);
         });
@@ -241,6 +237,8 @@ class MicroweberServiceProvider extends ServiceProvider
             'checkout_manager' => 'Shop\CheckoutManager',
             'layouts_manager' => 'LayoutsManager',
             'template_manager' => 'TemplateManager',
+            'captcha_manager' => 'CaptchaManager',
+            'permalink_manager' => 'PermalinkManager',
         ];
 
         foreach ($providers as $alias => $class) {
@@ -282,12 +280,12 @@ class MicroweberServiceProvider extends ServiceProvider
 
             $this->commands('Microweber\Commands\OptionCommand');
 
-            $language = get_option('language', 'website');
+//            $language = get_option('language', 'website');
+//
+//            if ($language != false) {
+//           //     set_current_lang($language);
+//            }
 
-            if ($language != false) {
-                set_current_lang($language);
-            }
-			
             if (is_cli()) {
 
                 $this->commands('Microweber\Commands\ResetCommand');

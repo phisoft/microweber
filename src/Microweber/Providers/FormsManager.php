@@ -172,12 +172,12 @@ class FormsManager
         if (!$dis_cap) {
             $dis_cap = $this->app->option_manager->get('disable_captcha', $default_mod_id) == 'y';
         }
-        
+
         $email_from = $this->app->option_manager->get('email_from', $for_id);
         if (!$email_from) {
         	$email_from = $this->app->option_manager->get('email_from', $default_mod_id);
         }
-        
+
         $from_name = $this->app->option_manager->get('email_from_name', $for_id);
         if (!$from_name) {
         	$from_name = $this->app->option_manager->get('email_from_name', $default_mod_id);
@@ -251,27 +251,29 @@ class FormsManager
                 return array(
                     'error' => _e('Please enter the captcha answer!', true),
                     'form_data_required' => 'captcha',
+                    'form_data_required_params' => array('captcha_parent_for_id'=>$for_id),
                     'form_data_module' => 'captcha'
                 );
 
 
             } else {
 //                if ($for_id != false) {
-//                    $validate_captcha = mw()->captcha->validate($params['captcha'], $for_id);
+//                    $validate_captcha = mw()->captcha_manager->validate($params['captcha'], $for_id);
 //                    if (!$validate_captcha) {
-//                        $validate_captcha = mw()->captcha->validate($params['captcha']);
+//                        $validate_captcha = mw()->captcha_manager->validate($params['captcha']);
 //                    }
 //                } else {
-//                    $validate_captcha = mw()->captcha->validate($params['captcha']);
+//                    $validate_captcha = mw()->captcha_manager->validate($params['captcha']);
 //                }
 
-                $validate_captcha = $this->app->captcha->validate($params['captcha'], $for_id);
+                $validate_captcha = $this->app->captcha_manager->validate($params['captcha'], $for_id);
                 if (!$validate_captcha) {
 
                     return array(
                         'error' => _e('Invalid captcha answer!', true),
                         'captcha_error' => true,
                         'form_data_required' => 'captcha',
+                        'form_data_required_params' => array('captcha_parent_for_id'=>$for_id),
                         'form_data_module' => 'captcha'
                     );
 
@@ -302,7 +304,6 @@ class FormsManager
         if (!$user_require_terms) {
             $user_require_terms = $this->app->option_manager->get('require_terms', $default_mod_id);
         }
-
 
         if ($user_require_terms) {
 

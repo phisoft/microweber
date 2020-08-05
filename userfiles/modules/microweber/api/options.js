@@ -57,7 +57,7 @@ mw.options = {
     save: function (el, callback) {
 
 
-        var el = mw.$(el);
+        el = mw.$(el);
         var og, og1, refresh_modules11;
         if (!el) {
             return;
@@ -160,9 +160,20 @@ mw.options = {
             option_group: og,
             option_value: val
         }
+
+
+        if (mname === undefined) {
+            if (og_test !== undefined && og_test && $(og_test).attr('parent-module')) {
+                o_data.module = $(og_test).attr('parent-module');
+             }
+        }
+
+
         if (mname !== undefined) {
             o_data.module = mname;
         }
+
+
 
 
         if (for_m_id !== undefined) {
@@ -171,6 +182,9 @@ mw.options = {
         if (og != undefined) {
             o_data.id = have_id;
         }
+
+
+
 
         var have_id = el.attr('data-custom-field-id');
 
@@ -214,7 +228,7 @@ mw.options = {
                     which_module_to_reload = refresh_modules12;
                 }
 
-                if ((typeof(liveEditSettings) != 'undefined' && liveEditSettings) || window.top.liveEditSettings) {
+                if ((typeof(liveEditSettings) != 'undefined' && liveEditSettings) || mw.top().win.liveEditSettings) {
                     if (!og1 && og_parent) {
                         which_module_to_reload = og_parent;
                     }
@@ -245,9 +259,15 @@ mw.options = {
                             var mod_element = window.parent.document.getElementById(which_module_to_reload);
                             if (mod_element) {
                                 // var module_parent_edit_field = window.parent.mw.tools.firstParentWithClass(mod_element, 'edit')
-                                var module_parent_edit_field = window.parent.mw.tools.firstMatchesOnNodeOrParent(mod_element, ['.edit[rel=inherit]'])
+                               // var module_parent_edit_field = window.parent.mw.tools.firstMatchesOnNodeOrParent(mod_element, ['.edit[rel=inherit]'])
+                                var module_parent_edit_field = window.parent.mw.tools.firstMatchesOnNodeOrParent(mod_element, ['.edit:not([itemprop=dateModified])']);
+                                if (!module_parent_edit_field) {
+                                   module_parent_edit_field = window.parent.mw.tools.firstMatchesOnNodeOrParent(mod_element, ['.edit[rel=inherit]']);
+                                }
+
                                 if (module_parent_edit_field) {
-                                    window.parent.mw.tools.addClass(module_parent_edit_field, 'changed');
+                                   // window.parent.mw.tools.addClass(module_parent_edit_field, 'changed');
+                                    window.parent.mw.wysiwyg.change(module_parent_edit_field)
                                     window.parent.mw.askusertostay = true;
 
                                 }

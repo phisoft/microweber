@@ -36,14 +36,15 @@ namespace Microweber;
  * @property \Microweber\Providers\Event                         $event_manager
  * @property \Microweber\Providers\ConfigurationManager          $config_manager
  * @property \Microweber\Providers\TemplateManager               $template_manager
+ * @property \Microweber\Providers\CaptchaManager               $captcha_manager
  * @property \Microweber\Providers\Ui                            $ui
- * @property \Microweber\Utils\Captcha                           $captcha
  * @property \Microweber\Utils\Http                              $http
  * @property \Microweber\Providers\FormsManager                  $forms_manager
  * @property \Microweber\Providers\Content\DataFieldsManager     $data_fields_manager
  * @property \Microweber\Providers\Content\TagsManager           $tags_manager
  * @property \Microweber\Providers\Content\AttributesManager     $attributes_manager
  * @property \Microweber\Providers\Helpers\Lang                  $lang_helper
+ * @property \Microweber\Providers\PermalinkManager              $permalink_manager
 
  */
 class Application

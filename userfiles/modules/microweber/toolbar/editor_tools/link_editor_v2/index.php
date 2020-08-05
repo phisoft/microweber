@@ -92,6 +92,7 @@
             });
             mw.$('#file_section').append(filepicker.frame);
             filepicker.handler.on('change', function (e, url) {
+                console.log(999, url)
                 var filename = url.split('/').pop();
 
                 Output({
@@ -259,7 +260,7 @@
 
     <div class="mw-ui-field-holder" id="link-text-holder">
         <div class="mw-field w100" size="large">
-            <input type="text" placeholder="Link text" id="link-text" oninput="Output({text: this.value.trim()})">
+            <input type="text" placeholder="Link text" id="link-text" oninput="Output({text: this.value})">
         </div>
     </div>
     <div class="mw-ui-field-holder" id="target-holder">
@@ -272,8 +273,9 @@
 
     <div class="mw-flex-row">
         <div class="mw-flex-col-xs-4 mw-ui-btn-vertical-nav">
-            <a class="mw-ui-btn" href="javascript:;" data-ctype="page"><?php _e("Page from My Website"); ?></a>
             <a class="mw-ui-btn" href="javascript:;" data-ctype="custom"><?php _e("Website URL"); ?></a>
+            <a class="mw-ui-btn" href="javascript:;" data-ctype="page"><?php _e("Page from My Website"); ?></a>
+
             <a class="mw-ui-btn" href="javascript:;" data-ctype="content"><?php _e("Post"); ?>, <?php _e("Category"); ?></a>
             <a class="mw-ui-btn" href="javascript:;" data-ctype="file"><?php _e("File"); ?></a>
             <a class="mw-ui-btn" href="javascript:;" data-ctype="email"><?php _e("Email"); ?></a>
@@ -281,6 +283,14 @@
             <a class="mw-ui-btn page-layout-btn" style="display: none;" href="javascript:;" data-ctype="layout"><?php _e("Page Layout"); ?></a>
         </div>
         <div class="mw-flex-col-xs-8 mw-ui-box mw-ui-box-content" id="tabs">
+
+            <div class="tab" style="display: block" data-ctype="custom">
+                <div class="media-search-holder">
+                    <div class="mw-field w100" data-before="URL">
+                        <input type="text" id="customweburl"  placeholder="http://..."/>
+                    </div>
+                </div>
+            </div>
             <div class="tab" data-ctype="page">
                 <?php
                 $unique = uniqid('link-tree-');
@@ -301,8 +311,10 @@
                                 element: $("#<?php print $unique; ?>")[0],
                                 sortable: false,
                                 selectable: true,
-                                singleSelect: true
+                                singleSelect: true,
+                                filterRemoteURL: '<?php print api_url('content/get_admin_js_tree_json'); ?>'
                             });
+                            pagesTreeData = [...data];
                             $(pagesTree).on("selectionChange", function(e, selection){
                                 var obj = selection[0];
                                 if(obj) {
@@ -317,18 +329,7 @@
                             $(pagesTree).on("ready", function(){
                                 $('#link-tree-search').on('input', function(){
                                     var val = this.value.toLowerCase().trim();
-                                    if(!val){
-                                        pagesTree.showAll();
-                                    }
-                                    else{
-                                        pagesTree.options.data.forEach(function(item) {
-                                            if(item.title.toLowerCase().indexOf(val) === -1) {
-                                                pagesTree.hide(item);
-                                            } else{
-                                                pagesTree.show(item);
-                                            }
-                                        });
-                                    }
+                                    pagesTree.filter(val)
                                 });
                             })
                         });
@@ -346,13 +347,6 @@
                     });
 
                 </script>
-            </div>
-            <div class="tab" style="display: block" data-ctype="custom">
-                <div class="media-search-holder">
-                    <div class="mw-field w100" data-before="URL">
-                        <input type="text" id="customweburl"  placeholder="http://..."/>
-                    </div>
-                </div>
             </div>
 
             <div class="tab" data-ctype="content">
@@ -387,7 +381,7 @@
                     $(document).ready(function () {
                         var available_elements_tab_show_hide_ctrl_counter = 0;
                         var html = [];
-                        top.$("h1[id],h12[id],h3[id],h4[id],h5[id],h6[id]", top.document.body).each(function () {
+                        mw.top().$("h1[id],h12[id],h3[id],h4[id],h5[id],h6[id]", top.document.body).each(function () {
                             available_elements_tab_show_hide_ctrl_counter++;
                             html.push({id: this.id, text: this.textContent});
                             mw.$('#available_elements').append('<a data-href="#' + this.id + '"><strong>' + this.nodeName + '</strong> - ' + this.textContent + '</a>')
@@ -420,7 +414,7 @@
                     };
                     $(document).ready(function () {
                         var layoutsData = [];
-                        var layouts = top.mw.$('.module[data-type="layouts"]');
+                        var layouts = mw.top().$('.module[data-type="layouts"]');
                         layouts.each(function () {
                             layoutsData.push({
                                 name: this.getAttribute('template').split('.')[0],
@@ -434,7 +428,7 @@
                             var li = $('<li><label class="mw-ui-check">' + radio + ' ' + this.name + '</label></li>');
                             var el = this.element;
                             li.find('input').on('click', function(){
-                                top.mw.tools.scrollTo(el);
+                                mw.top().tools.scrollTo(el);
                                 submitLayoutLink()
                             });
                             list.append(li);

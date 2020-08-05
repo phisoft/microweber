@@ -8,7 +8,7 @@ use Config;
 
 trait QueryFilter
 {
-    public $table_cache_ttl = 60;
+    public $table_cache_ttl = 600;
 
     public $filter_keys = [];
 
@@ -204,6 +204,36 @@ trait QueryFilter
                     unset($params[$filter]);
                     break;
 
+                case 'search_in_tags':
+
+                    $to_search_keyword = false;
+                    if (isset($params['search_in_tags_keyword'])) {
+                        $params['search_in_tags_keyword'] = urldecode($params['search_in_tags_keyword']);
+                        $to_search_keyword = $params['search_in_tags_keyword'];
+                    }
+
+                    if ($to_search_keyword) {
+                        $to_search_keywords = explode(',', $to_search_keyword);
+                        if (!empty($to_search_keywords)) {
+                            if ($this->supports($table, 'tag')) {
+                                $query = $query->join('tagging_tagged', 'tagging_tagged.taggable_id', '=', $table . '.id')->distinct();
+                                foreach ($to_search_keywords as $to_search_keyword) {
+                                    $to_search_keyword = trim($to_search_keyword);
+                                    if ($to_search_keyword != false) {
+                                        if ($dbDriver == 'pgsql') {
+                                            $query = $query->orWhere('tagging_tagged.tag_name', 'ILIKE', '%' . $to_search_keyword . '%');
+                                        } else {
+                                            $query = $query->orWhere('tagging_tagged.tag_name', 'LIKE', '%' . $to_search_keyword . '%');
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    unset($params[$filter]);
+                    break;
+
                 case 'keyword':
 
                     if (isset($params['search_in_fields'])) {
@@ -247,6 +277,17 @@ trait QueryFilter
                                         $to_search_keyword = str_replace('*', '', $to_search_keyword);
                                         $to_search_keyword = str_replace(';', '', $to_search_keyword);
                                         if ($to_search_keyword != '') {
+
+                                            /*                                            // Search in tags
+                                                                                       if ($this->supports($table, 'tag') and isset($filter['search_in_tags']) && $filter['search_in_tags']) {
+                                                                                             $query = $query->join('tagging_tagged', 'tagging_tagged.taggable_id', '=', $table . '.id')->distinct();
+                                                                                            if ($dbDriver == 'pgsql') {
+                                                                                                $query = $query->orWhere('tagging_tagged.tag_name', 'ILIKE', '%'.$to_search_keyword.'%');
+                                                                                            } else {
+                                                                                                $query = $query->orWhere('tagging_tagged.tag_name', 'LIKE', '%'.$to_search_keyword.'%');
+                                                                                            }
+                                                                                        }*/
+
                                             if (!empty($to_search_in_fields)) {
                                                 $where_or_where = 'orWhere';
                                                 if (isset($params['keywords_exact_match'])) {
@@ -272,15 +313,15 @@ trait QueryFilter
                                                     foreach ($to_search_in_fields as $to_search_in_field) {
                                                         $to_search_keyword = str_replace('.', ' ', $to_search_keyword);
                                                         if ($dbDriver == 'pgsql') {
-                                                            $query = $query->orWhere($to_search_in_field, 'ILIKE', '%'.$to_search_keyword.'%');
+                                                            $query = $query->orWhere($to_search_in_field, 'ILIKE', '%' . $to_search_keyword . '%');
                                                         } else {
-                                                            $query = $query->orWhere($to_search_in_field, 'LIKE', '%'.$to_search_keyword.'%');
+                                                            $query = $query->orWhere($to_search_in_field, 'LIKE', '%' . $to_search_keyword . '%');
                                                             $query = $query->orWhere($to_search_in_field, 'REGEXP', $to_search_keyword);
-                                                            $query = $query->orWhere($to_search_in_field, 'LIKE', '%'.$to_search_keyword);
-                                                            $query = $query->orWhere($to_search_in_field, 'LIKE', '.'.$to_search_keyword);
-                                                            $query = $query->orWhere($to_search_in_field, 'LIKE', $to_search_keyword.'%');
-                                                            $query = $query->orWhereRaw('LOWER(`'.$to_search_in_field.'`) LIKE ? ',['%'.trim(strtolower($to_search_keyword)).'%']);
-                                                        }           
+                                                            $query = $query->orWhere($to_search_in_field, 'LIKE', '%' . $to_search_keyword);
+                                                            $query = $query->orWhere($to_search_in_field, 'LIKE', '.' . $to_search_keyword);
+                                                            $query = $query->orWhere($to_search_in_field, 'LIKE', $to_search_keyword . '%');
+                                                            $query = $query->orWhereRaw('LOWER(`' . $to_search_in_field . '`) LIKE ? ', ['%' . trim(strtolower($to_search_keyword)) . '%']);
+                                                        }
                                                     }
 
                                                 });
@@ -312,7 +353,9 @@ trait QueryFilter
                 case 'one':
 
                     break;
-                case 'tag':
+
+
+                    case 'tag':
                 case 'tags':
                 case 'all_tags':
                 case 'all_tag':
@@ -371,6 +414,13 @@ trait QueryFilter
                                 $cat_ids_strict = '';
                             }
 
+                            if (!$strict_categories) {
+                                if($ids){
+
+                                  //   $get_subcats = $this->table('categories')->where('data_type','category')->whereIn('parent_id',$ids)->get();
+                                 }
+                            }
+
                             if (!isset($search_joined_tables_check['categories_items'])) {
                                 $search_joined_tables_check['categories_items'] = true;
 
@@ -401,7 +451,6 @@ trait QueryFilter
 //
 
                             //  $query->whereIn('categories_items_joined_table.parent_id', $ids)->distinct();
-                            //  dd($ids);
 
 //                            foreach ($ids as $cat_id) {
 //                               $query->where('categories_items_joined_table.parent_id', $cat_id);
@@ -416,7 +465,7 @@ trait QueryFilter
 
                         }
 
-                        //dd($query);
+
                     }
                     unset($params[$filter]);
 
@@ -475,16 +524,16 @@ trait QueryFilter
                     $query->join($value, $table . '.rel_id', '=', $value . '.id')->where($table . '.rel_type', $value);
                     break;
                 case 'current_page':
-                    $criteria = 1;
-
+                     $criteria = 0;
+                  //  $criteria = intval($value);
                     if ($value > 1) {
                         if ($is_limit != false) {
                             $criteria = intval($value - 1) * intval($is_limit);
                         }
                     }
-                    if ($criteria > 1) {
-                        $query = $query->skip($criteria);
-                    }
+
+                    $query = $query->skip($criteria);
+
                     unset($params[$filter]);
                     break;
                 case 'ids':
@@ -545,7 +594,7 @@ trait QueryFilter
                     break;
 
                 case 'no_cache':
-                    $this->useCache = false;
+                   // $this->useCache = false;
                     break;
 
 //                case 'is_active':
@@ -679,6 +728,9 @@ trait QueryFilter
             }
             call_user_func_array($callback, [$query, $params[$name], $table]);
         }
+
+        $query_hook = $criteria_overwrite = $this->app->event_manager->response('mw.database.' . $table . '.get.query_filter', ['query'=>$query,'params'=>$params]);
+        $query = $this->map_array_to_table($table, $query_hook['query']);
 
         return $query;
     }

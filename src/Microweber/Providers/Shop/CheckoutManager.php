@@ -2,6 +2,9 @@
 
 namespace Microweber\Providers\Shop;
 
+use Microweber\App\Providers\Illuminate\Support\Facades\Config;
+use Microweber\App\Providers\Illuminate\Support\Facades\Crypt;
+
 class CheckoutManager
 {
     /** @var \Microweber\Application */
@@ -45,12 +48,16 @@ class CheckoutManager
         $mw_process_payment_failed = false;
 
         if (isset($_REQUEST['mw_payment_success']) or isset($_REQUEST['mw_payment_failure'])) {
+
             $update_order = $update_order_orig = $this->app->order_manager->get_by_id($sess_order_id);
             if (isset($update_order['payment_gw'])) {
                 $gw_return = normalize_path(modules_path() . $update_order['payment_gw'] . DS . 'return.php', false);
                 if (is_file($gw_return)) {
                     include $gw_return;
+
                     if ($update_order != $update_order_orig) {
+                        $this->_verify_request_params($update_order);
+
                         $this->app->order_manager->save($update_order);
                     }
                 }
@@ -62,8 +69,11 @@ class CheckoutManager
                 $exec_return = true;
             } elseif (isset($_REQUEST['mw_payment_failure'])) {
                 if (isset($_REQUEST['recart']) and $_REQUEST['recart'] != false and isset($_REQUEST['order_id'])) {
-
                     mw()->cart_manager->recover_cart($_REQUEST['recart'], $_REQUEST['order_id']);
+                }
+
+                if (isset($sess_order_id)) {
+                    $this->app->event_manager->trigger('mw.cart.checkout.order_failure', $sess_order_id);
                 }
 
                 $mw_process_payment_failed = true;
@@ -312,6 +322,9 @@ class CheckoutManager
             $place_order['amount'] = $amount;
             $place_order['allow_html'] = true;
             $place_order['currency'] = $this->app->option_manager->get('currency', 'payments');
+            if (!$place_order['currency']) {
+                $place_order['currency'] = 'USD';
+            }
 
             if (isset($data['shipping_gw'])) {
                 $place_order['shipping_service'] = $data['shipping_gw'];
@@ -324,7 +337,7 @@ class CheckoutManager
             $items_count = $this->app->shop_manager->cart_sum(false);
             $place_order['items_count'] = $items_count;
 
-            $cart_checksum = md5($sid . serialize($check_cart) . uniqid());
+            $cart_checksum = md5($sid . serialize($check_cart) . uniqid(time()));
 
             $place_order['payment_verify_token'] = $cart_checksum;
 
@@ -367,25 +380,114 @@ class CheckoutManager
             $place_order['discount_value'] = $discount_value;
 
 
+            // convert currency to payment provider currency
+            $currencies_list_paypal = mw()->shop_manager->currency_get_for_paypal();
+            $currencyCode = strtoupper($place_order['currency']);
+            $amount = $place_order['amount'];
+            $amount = floatval($amount);
+            $amount =  round($amount,2);
+            if (!isset($place_order['payment_amount'])) {
+                $place_order['payment_amount'] = $amount;
+            }
+
+            $amount = floatval($amount);
+            $amount =  round($amount,2);
+
+            $place_order['payment_shipping'] = $place_order['shipping'];
+
+
+            $payment_currency = get_option('payment_currency', 'payments');
+            $payment_currency_rate = get_option('payment_currency_rate', 'payments');
+
+
+            if ($payment_currency and $payment_currency != $currencyCode) {
+
+                if (!in_array(strtoupper($place_order['currency']), $currencies_list_paypal)) {
+
+                    $currencyCode = $payment_currency;
+
+
+                    if ($payment_currency_rate != false) {
+                        $payment_currency_rate = str_replace(',', '.', $payment_currency_rate);
+                        $payment_currency_rate = floatval($payment_currency_rate);
+
+                    }
+                    if ($payment_currency_rate != 0.00) {
+
+                        $amount = $amount * $payment_currency_rate;
+                        $amount = floatval($amount);
+                        $amount =  round($amount,2);
+
+                        $place_order['payment_amount'] = $amount;
+
+                    }
+
+
+                    if ($place_order['payment_shipping']) {
+                        $amount_shipping  = $place_order['payment_shipping'] * $payment_currency_rate;
+                        $amount_shipping = floatval($amount_shipping);
+                        $amount_shipping =  round($amount_shipping,2);
+                        $place_order['payment_shipping'] = $amount_shipping;
+
+                    }
+
+
+                }
+            }
+
+
+            $place_order['payment_currency'] = $currencyCode;
+
+
+            // end of convert for curency
+
+
             if ($mw_process_payment == true) {
                 $shop_dir = module_dir('shop');
                 $shop_dir = $shop_dir . DS . 'payments' . DS . 'gateways' . DS;
 
                 if ($data['payment_gw'] != 'none') {
+                    $place_order['payment_gw'] = $data['payment_gw'];
                     $gw_process = modules_path() . $data['payment_gw'] . '_process.php';
                     if (!is_file($gw_process)) {
                         $gw_process = normalize_path(modules_path() . $data['payment_gw'] . DS . 'process.php', false);
                     }
 
-                    $mw_return_url = $this->app->url_manager->api_link('checkout') . '?mw_payment_success=1&order_id=' . $place_order['id'] . '&payment_gw=' . $data['payment_gw'] . '&payment_verify_token=' . $place_order['payment_verify_token'] . $return_url_after;
-                    $mw_cancel_url = $this->app->url_manager->api_link('checkout') . '?mw_payment_failure=1&order_id=' . $place_order['id'] . '&payment_gw=' . $data['payment_gw'] . '&recart=' . $sid . $return_url_after;
-                    $mw_ipn_url = $this->app->url_manager->api_link('checkout_ipn') . '?payment_gw=' . $data['payment_gw'] . '&order_id=' . $place_order['id'] . '&payment_verify_token=' . $place_order['payment_verify_token'] . $return_url_after;
+                    $encrypter = new \Illuminate\Encryption\Encrypter(md5(Config::get('app.key').$place_order['payment_verify_token']), Config::get('app.cipher'));
+
+                    $vkey_data = array();
+                    $vkey_data['payment_amount'] = $place_order['payment_amount'];
+                    $vkey_data['payment_currency'] = $place_order['payment_currency'];
+
+
+                    $mw_return_url = $this->app->url_manager->api_link('checkout') . '?mw_payment_success=1&order_id=' . $place_order['id'] . '&payment_gw=' . $place_order['payment_gw'] . '&payment_verify_token=' . $place_order['payment_verify_token'] . $return_url_after;
+                    $vkey_data_temp = $vkey_data;
+                    $vkey_data_temp['url'] = $mw_return_url;
+                    $mw_return_url .= '&_vkey_url=' . urlencode($encrypter->encrypt(json_encode($vkey_data_temp)));
+
+
+                    $mw_cancel_url = $this->app->url_manager->api_link('checkout') . '?mw_payment_failure=1&order_id=' . $place_order['id'] . '&payment_gw=' . $place_order['payment_gw'] . '&recart=' . $sid . $return_url_after;
+                    $vkey_data_temp = $vkey_data;
+                    $vkey_data_temp['url'] = $mw_cancel_url;
+                    $mw_cancel_url .= '&_vkey_url=' . urlencode($encrypter->encrypt(json_encode($vkey_data_temp)));
+
+
+                    $mw_ipn_url = $this->app->url_manager->api_link('checkout_ipn') . '?payment_gw=' . $place_order['payment_gw'] . '&order_id=' . $place_order['id'] . '&payment_verify_token=' . $place_order['payment_verify_token'] . $return_url_after;
+                    $vkey_data_temp = $vkey_data;
+                    $vkey_data_temp['url'] = $mw_ipn_url;
+                    $mw_ipn_url .= '&_vkey_url=' . urlencode($encrypter->encrypt(json_encode($vkey_data_temp)));
+
+
+                    //var_dump($mw_ipn_url);
+
 
                     if (is_file($gw_process)) {
                         require_once $gw_process;
                     } else {
                         $checkout_errors['payment_gw'] = 'Payment gateway\'s process file not found.';
                     }
+
+
                 } else {
                     $place_order['order_completed'] = 1;
                     $place_order['is_paid'] = 0;
@@ -405,6 +507,13 @@ class CheckoutManager
 
                 $ord = $this->app->shop_manager->place_order($place_order);
                 $place_order['id'] = $ord;
+
+
+                if (isset($place_order['is_paid']) and $place_order['is_paid']) {
+                    $this->app->event_manager->trigger('mw.cart.checkout.order_paid', $place_order);
+                }
+
+
             }
 
             if (isset($place_order) and !empty($place_order)) {
@@ -545,13 +654,13 @@ class CheckoutManager
 
             if ($order_email_enabled) {
 
-               //  $order_email_subject = $this->app->option_manager->get('order_email_subject', 'orders');
+                //  $order_email_subject = $this->app->option_manager->get('order_email_subject', 'orders');
                 // $order_email_content = $this->app->option_manager->get('order_email_content', 'orders');
 
                 $mail_template = false;
                 $mail_template_binds = $this->app->event_manager->trigger('mw.cart.confirm_email_send', $order_id);
                 if (is_array($mail_template_binds)) {
-                    foreach ($mail_template_binds  as $bind) {
+                    foreach ($mail_template_binds as $bind) {
                         if (is_array($bind) && isset($bind['mail_template'])) {
                             $mail_template = $bind['mail_template'];
                         }
@@ -601,42 +710,42 @@ class CheckoutManager
                         $cart_items = $this->app->shop_manager->get_cart('order_id=' . $ord_data['id'] . '&no_session_id=' . $this->app->user_manager->session_id());
 
                         $cart_items_info = array();
+                        if ($cart_items) {
+                            foreach ($cart_items as $cart_item) {
+                                $arr = array();
+                                if (isset($cart_item['item_image']) and $cart_item['item_image']) {
 
-                        foreach ($cart_items as $cart_item) {
-                            $arr = array();
-                            if (isset($cart_item['item_image']) and $cart_item['item_image']) {
+                                    $arr['item_image'] = $cart_item['item_image'];
+                                    $arr['item_image'] = '<img src="' . $arr['item_image'] . '" width="100" />';
+                                }
+                                if (isset($cart_item['link'])) {
+                                    $arr['link'] = $cart_item['link'];
+                                }
+                                if (isset($cart_item['title'])) {
+                                    $arr['title'] = $cart_item['title'];
+                                }
+                                if (isset($cart_item['custom_fields'])) {
+                                    $arr['custom_fields'] = $cart_item['custom_fields'];
+                                }
+                                $cart_items_info[] = $arr;
+                            }
 
-                                $arr['item_image'] = $cart_item['item_image'];
-                                $arr['item_image'] = '<img src="' . $arr['item_image'] . '" width="100" />';
-                            }
-                            if (isset($cart_item['link'])) {
-                                $arr['link'] = $cart_item['link'];
-                            }
-                            if (isset($cart_item['title'])) {
-                                $arr['title'] = $cart_item['title'];
-                            }
-                            if (isset($cart_item['custom_fields'])) {
-                                $arr['custom_fields'] = $cart_item['custom_fields'];
-                            }
-                            $cart_items_info[] = $arr;
-                        }
-
-                        $order_items_html = $this->app->format->array_to_table($cart_items_info);
-                        $order_email_content = str_replace('{{cart_items}}', $order_items_html, $order_email_content);
-                        $order_email_content = str_replace('{{date}}', date('F jS, Y', strtotime($ord_data['created_at'])), $order_email_content);
-                        foreach ($ord_data as $key => $value) {
-                            if (!is_array($value) and is_string($key)) {
-                                if (strtolower($key) == 'amount') {
-                                    $value = number_format($value, 2);
-                                    $order_email_content = str_ireplace('{{' . $key . '}}', $value, $order_email_content);
-                                    continue;
+                            $order_items_html = $this->app->format->array_to_table($cart_items_info);
+                            $order_email_content = str_replace('{{cart_items}}', $order_items_html, $order_email_content);
+                            $order_email_content = str_replace('{{date}}', date('F jS, Y', strtotime($ord_data['created_at'])), $order_email_content);
+                            foreach ($ord_data as $key => $value) {
+                                if (!is_array($value) and is_string($key)) {
+                                    if (strtolower($key) == 'amount') {
+                                        $value = number_format($value, 2);
+                                        $order_email_content = str_ireplace('{{' . $key . '}}', $value, $order_email_content);
+                                        continue;
+                                    }
                                 }
                             }
                         }
                     }
-
                     if (get_option('bank_transfer_send_email_instructions', 'payments') == 'y') {
-                        $order_email_content .=  _e("Follow payment instructions", true);
+                        $order_email_content .= _e("Follow payment instructions", true);
                         $order_email_content .= '<br />' . get_option('bank_transfer_instructions', 'payments');
                     }
 
@@ -646,24 +755,24 @@ class CheckoutManager
                         array(
                             'cart' => $cart_items,
                             'order' => $ord_data,
-                            'order_id'=>$ord_data['id'],
-                            'transaction_id'=>$ord_data['transaction_id'],
-                            'currency'=>$ord_data['currency'],
-                            'order_status'=>$ord_data['order_status'],
-                            'first_name'=>$ord_data['first_name'],
-                            'last_name'=>$ord_data['last_name'],
-                            'email'=>$ord_data['email'],
-                            'phone'=>$ord_data['phone'],
-                            'address'=>$ord_data['address'],
-                            'zip'=>$ord_data['zip'],
-                            'state'=>$ord_data['state'],
-                            'city'=>$ord_data['city'],
-                            'country'=>$ord_data['country']
+                            'order_id' => $ord_data['id'],
+                            'transaction_id' => $ord_data['transaction_id'],
+                            'currency' => $ord_data['currency'],
+                            'order_status' => $ord_data['order_status'],
+                            'first_name' => $ord_data['first_name'],
+                            'last_name' => $ord_data['last_name'],
+                            'email' => $ord_data['email'],
+                            'phone' => $ord_data['phone'],
+                            'address' => $ord_data['address'],
+                            'zip' => $ord_data['zip'],
+                            'state' => $ord_data['state'],
+                            'city' => $ord_data['city'],
+                            'country' => $ord_data['country']
                         )
                     );
 
                     $sender = new \Microweber\Utils\MailSender();
-                    
+
                     // Send only to client
                     if ($send_to_client && !$send_to_admins && filter_var($to, FILTER_VALIDATE_EMAIL)) {
                         $sender->send($to, $order_email_subject, $order_email_content);
@@ -698,12 +807,16 @@ class CheckoutManager
 
     public function checkout_ipn($data)
     {
+
+
+
         if (isset($data['payment_verify_token'])) {
             $payment_verify_token = ($data['payment_verify_token']);
         }
         if (!isset($data['payment_gw'])) {
             return array('error' => 'You must provide a payment gateway parameter!');
         }
+
 
         $data['payment_gw'] = str_replace('..', '', $data['payment_gw']);
 
@@ -714,11 +827,11 @@ class CheckoutManager
 
         $query = array();
         $query['payment_verify_token'] = $payment_verify_token;
-        if (isset($data['order_id'])) {
-            $query['id'] = intval($data['order_id']);
-        } else {
-            $query['transaction_id'] = '[null]';
-        }
+//        if (isset($data['order_id'])) {
+//            $query['id'] = intval($data['order_id']);
+//        } else {
+//            $query['transaction_id'] = '[null]';
+//        }
         $query['limit'] = 1;
         $query['table'] = $table;
         $query['no_cache'] = true;
@@ -730,6 +843,10 @@ class CheckoutManager
             $ord_data = $ord_data[0];
             $ord = $ord_data['id'];
         }
+
+
+
+
 
         $cart_table = $this->tables['cart'];
         $table_orders = $this->tables['cart_orders'];
@@ -743,26 +860,49 @@ class CheckoutManager
             $gw_process = normalize_path(modules_path() . $data['payment_gw'] . DS . 'notify.php', false);
         }
 
+
         $update_order = array();
         if (is_file($gw_process)) {
             include $gw_process;
+
+            $this->_verify_request_params($update_order);
+
+
         } else {
             return array('error' => 'The payment gateway is not found!');
         }
+        $update_order_event_data = [];
 
-        if (!empty($update_order) and isset($update_order['order_completed']) and trim($update_order['order_completed']) == 1) {
-            $update_order['id'] = $ord;
-            $update_order['payment_gw'] = $data['payment_gw'];
-            $ord = $this->app->database_manager->save($table_orders, $update_order);
-            $this->confirm_email_send($ord);
-            if (isset($update_order['is_paid']) and $update_order['is_paid'] == 1) {
+
+        if (is_array($update_order)) {
+            $update_order_event_data = array_merge($ord_data, $update_order);
+        }
+
+
+        if (!empty($update_order_event_data) and isset($update_order_event_data['order_completed']) and $update_order_event_data['order_completed'] == 1) {
+            $update_order_event_data['id'] = $ord;
+            $update_order_event_data['payment_gw'] = $data['payment_gw'];
+            $ord = $this->app->database_manager->save($table_orders, $update_order_event_data);
+
+  
+
+            if (isset($update_order_event_data['is_paid']) and $update_order_event_data['is_paid']) {
+                $this->app->event_manager->trigger('mw.cart.checkout.order_paid', $update_order_event_data);
+            }
+
+            if (isset($update_order_event_data['is_paid']) and $update_order_event_data['is_paid'] == 1) {
                 $this->app->shop_manager->update_quantities($ord);
+
+
             }
             if ($ord > 0) {
                 $this->app->cache_manager->delete('cart/global');
                 $this->app->cache_manager->delete('cart_orders/global');
                 //return true;
             }
+
+            $this->confirm_email_send($ord);
+
         }
 
         if (isset($data['return_to'])) {
@@ -839,5 +979,115 @@ class CheckoutManager
         }
 
         return $url;
+    }
+
+    private function _verify_request_params($data)
+    {
+
+
+        $error = false;
+
+        if (!isset($data['payment_verify_token'])) {
+            $error = true;
+        }
+
+        if (!isset($data['payment_amount'])) {
+            $error = true;
+        }
+
+
+        if (!isset($data['payment_currency'])) {
+            $error = true;
+        }
+
+
+        $vkey = false;
+
+        $url = url_current();
+        $param = '_vkey_url';
+        $pieces = parse_url($url);
+        $query = [];
+        if ($pieces['query']) {
+            parse_str($pieces['query'], $query);
+            $data[$param] = $query[$param];
+            unset($query[$param]);
+            $pieces['query'] = http_build_query($query);
+        }
+        if (!isset($data['_vkey_url'])) {
+            $error = true;
+        } else {
+            $vkey = $data['_vkey_url'];
+        }
+
+
+        if (!$vkey) {
+            $error = true;
+        }
+
+
+        if (!$error) {
+
+            $vkey = urldecode($vkey);
+
+            $encrypter = new \Illuminate\Encryption\Encrypter(md5(Config::get('app.key').$data['payment_verify_token']), Config::get('app.cipher'));
+
+            $url_verify = $this->_build_url($pieces);
+            $decrypt_data = @json_decode($encrypter->decrypt($vkey), true);
+
+            if (!$decrypt_data) {
+                $error = true;
+            } else {
+
+                $decrypt_url = $decrypt_data['url'];
+                $decrypt_payment_amount = $decrypt_data['payment_amount'];
+                $decrypt_payment_currency = $decrypt_data['payment_currency'];
+
+                $url_verify = urldecode($url_verify);
+                $decrypt_url = urldecode($decrypt_url);
+                $amount1  = $data['payment_amount'];
+                $amount2  = $decrypt_payment_amount;
+
+
+                $amount1 = floatval($amount1);
+                $amount1 =  round($amount1,2);
+
+                $amount2 = floatval($amount2);
+                $amount2 =  round($amount2,2);
+
+
+                if (md5($url_verify) !== md5($decrypt_url)) {
+                    $error = true;
+                }
+
+                if (md5($amount1) !== md5($amount2)) {
+                    $error = true;
+                }
+                if (md5(strtoupper($decrypt_payment_currency)) !== md5(strtoupper($data['payment_currency']))) {
+                    $error = true;
+                }
+            }
+        }
+
+
+        if ($error) {
+
+            abort(403, 'Unauthorized action.');
+        }
+
+    }
+
+    private function _build_url(array $elements)
+    {
+        $e = $elements;
+        return
+            (isset($e['host']) ? (
+                (isset($e['scheme']) ? "$e[scheme]://" : '//') .
+                (isset($e['user']) ? $e['user'] . (isset($e['pass']) ? ":$e[pass]" : '') . '@' : '') .
+                $e['host'] .
+                (isset($e['port']) ? ":$e[port]" : '')
+            ) : '') .
+            (isset($e['path']) ? $e['path'] : '/') .
+            (isset($e['query']) ? '?' . (is_array($e['query']) ? http_build_query($e['query'], '', '&') : $e['query']) : '') .
+            (isset($e['fragment']) ? "#$e[fragment]" : '');
     }
 }

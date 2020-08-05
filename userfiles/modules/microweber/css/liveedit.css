@@ -9,6 +9,8 @@
 
 *********************************************/
 
+#liveedit_wysiwyg{direction: ltr !important;}
+
 html, body {
     min-height: 100%;
     -ms-overflow-style: scrollbar;
@@ -193,6 +195,11 @@ body.mw-live-edit .plain-text {
 .modules-list h5,
 .modules-list h6{
     color: #333;
+}
+
+.modules-list,
+.modules-list li{
+    list-style: none !important;
 }
 
 
@@ -432,6 +439,21 @@ body.mw-column-resizing * {
     visibility: visible;
     transition: all .2s cubic-bezier(.73, 1.06, .58, .84);
 }
+.mw_dropable:before{
+    position: absolute;
+    top: -20px;
+    font-size: 11px;
+    font-weight: bold;
+    right: 0;
+}
+.mw_dropable.mw-dropable-tagret-rel-global:before{
+    content: 'Global region';
+    color: #b52e4e;
+}
+.mw_dropable.mw-dropable-tagret-rel-global{
+    background-color: #b52e4e !important;
+}
+
 
 .mw_dropable_hidden {
     visibility: hidden;
@@ -2762,6 +2784,9 @@ div[id*='SSDIVEL'] {
     left: 100px;
 }
 
+.mw-tooltip-insert-module .mw-tooltip-content{
+    max-height: 330px;
+}
 .mw-tooltip-insert-module {
     width: 290px;
     max-width: 100%;
@@ -4106,6 +4131,18 @@ body.dragStart .mw-handle-item.ui-draggable-dragging {
     display: none;
 }
 
+.dynamic-submodule-handle .mw_module_settings_sidebar_icon{
+    margin: 0px;
+    margin-right: 5px;
+    width: 15px;
+    height: 15px;
+}
+.mw-handle-menu-item.dynamic-submodule-handle {
+    text-overflow:ellipsis;
+    white-space: normal;
+}
+
+
 .mw-handle-menu-default .mw-handle-menu-item-icon,
 .mw-handle-menu-default .mw-edit-module-settings-tooltip-icon {
     font-size: 19px;
@@ -4622,6 +4659,17 @@ div.element{
 }
 .mw-layout-plus-bottom{
     border-radius: 0 0 5px 5px;
+}
+
+.mw-icon-list-settings-icons .mw-ui-btn-nav select{
+    flex: 1;
+}
+.mw-icon-list-settings-icons .mw-ui-btn-nav{
+    display: flex;
+}
+
+#liveedit_wysiwyg .mw-dropdown{
+    float: none;
 }
 
 

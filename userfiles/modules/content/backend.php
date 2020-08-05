@@ -10,7 +10,9 @@ if (isset($_REQUEST['edit_content']) and $_REQUEST['edit_content'] != 0) {
 }
 
 ?>
-
+<script type="text/javascript">
+    mw.require("content.js");
+</script>
 <script type="text/javascript">
 
     mw.on.hashParam("search", function () {
@@ -37,7 +39,7 @@ if (isset($_REQUEST['edit_content']) and $_REQUEST['edit_content'] != 0) {
 
 
     var mainTreeSetActiveItems = function(){
-        if(mw.adminPagesTree){
+        if(typeof(mw.adminPagesTree) != 'undefined'){
 
             var hp = mw.url.getHashParams(location.hash);
 
@@ -97,6 +99,7 @@ if (isset($_REQUEST['edit_content']) and $_REQUEST['edit_content'] != 0) {
         manage: function (type, id) {
 
 
+
          //   add_to_parent_page
 
             var id = id || 0;
@@ -132,6 +135,7 @@ if (isset($_REQUEST['edit_content']) and $_REQUEST['edit_content'] != 0) {
     }
 
     function mw_select_page_for_editing($p_id) {
+
 
 
         mw.$(".pages_tree_item.active-bg").removeClass('active-bg');
@@ -215,6 +219,9 @@ if (isset($_REQUEST['edit_content']) and $_REQUEST['edit_content'] != 0) {
 
 
     mw.on.hashParam("action", function () {
+    //    mw.url.windowDeleteHashParam('pg')
+
+
         mainTreeSetActiveItems()
 
         if (this == false) {
@@ -696,12 +703,16 @@ if ($action == 'posts') {
                                     var treeTail = [
                                         {
                                             title: '<?php _lang("Trash") ?>',
-                                            icon:'mai-bin',
+                                            icon:'mdi mdi-delete',
                                             action:function(){
                                                 mw.url.windowHashParam('action', 'trash');
                                             }
                                         }
                                     ];
+
+
+
+
                                     pagesTree = new mw.tree({
                                         data:data,
                                         element:$("#pages_tree_container_<?php print $my_tree_id; ?>")[0],
@@ -712,16 +723,16 @@ if ($action == 'posts') {
                                         contextMenu:[
                                             {
                                                 title:'Edit',
-                                                icon:'mw-icon-edit',
+                                                icon:'mdi mdi-pencil',
                                                 action:function(element, data, menuitem){
                                                     mw.url.windowHashParam("action", "edit"+data.type+":"+data.id);
                                                 }
                                             },
                                             {
                                                 title:'Move to trash',
-                                                icon:'mw-icon-app-trash',
+                                                icon:'mdi mdi-close',
                                                 action:function(element, data, menuitem){
-                                                    if(data.type  == 'category' ){
+                                                    if(data.type  === 'category' ){
                                                         mw.content.deleteCategory(data.id, function(){
 
                                                             $('#' + pagesTree.options.id + '-' + data.type + '-' + data.id).fadeOut(function(){
@@ -782,7 +793,7 @@ if ($action == 'posts') {
                                             $('li.selected', pagesTree.list).each(function(){
                                                 pagesTree.unselect(this)
                                             });
-                                            var li = this.parentNode.parentNode,
+                                            var li = mw.tools.firstParentWithTag(this, 'li'),
                                                 data = li._data,
                                                 action;
                                             //pagesTree.select(li);
@@ -889,8 +900,7 @@ if ($action == 'posts') {
                 });
             </script>
 
-
-            <div id="pages_edit_container" <?php print $pages_container_params_str; ?>></div>
+             <div id="pages_edit_container" <?php print $pages_container_params_str; ?>></div>
         </div>
     </div>
 </div>

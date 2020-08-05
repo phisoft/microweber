@@ -1,10 +1,16 @@
-var uploader = mw.files.uploader({
-    filetypes: "zip, sql, json, csv, xls, xlsx, xml",
-    multiple: false
-});
+
+mw.require("files.js");
+
+
 
 _mw_log_reload_int = false;
 $(document).ready(function () {
+
+
+    var uploader = mw.files.uploader({
+        filetypes: "zip, sql, json, csv, xls, xlsx, xml",
+        multiple: false
+    });
 
     mw.$("#mw_uploader").append(uploader);
     $(uploader).bind("FileUploaded", function (obj, data) {

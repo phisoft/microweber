@@ -1,8 +1,21 @@
 mw.getExtradataFormData = function (data, call) {
-     if (data.form_data_module) {
+
+    if (data.form_data_required) {
+        if (!data.form_data_module_params) {
+            data.form_data_module_params = {};
+        }
+        data.form_data_module_params._confirm = 1
+    }
+
+
+    if (data.form_data_required_params) {
+        data.form_data_module_params = $.extend({}, data.form_data_required_params,data.form_data_module_params);
+    }
+
+    if (data.form_data_module) {
         mw.loadModuleData(data.form_data_module, function (moduledata) {
             call.call(undefined, moduledata);
-        },null,data.form_data_module_params);
+        }, null, data.form_data_module_params);
     }
     else {
         call.call(undefined, data.form_data_required);
@@ -22,18 +35,34 @@ mw.extradataForm = function (options, data) {
             mw.$(form).append('<hr><button type="submit" class="mw-ui-btn pull-right mw-ui-btn-invert">' + mw.lang('Submit') + '</button>');
         }
 
+
+
         form.action = options.url;
         form.method = options.type;
         form.__modal = mw.dialog({
             content: form,
-            title: data.error
+            title: data.error,
+            closeButton: false,
+            closeOnEscape: false
         });
         mw.$('script', form).each(function() {
             eval($(this).text());
         });
 
+        $(form.__modal).on('closedByUser', function () {
+            if(options.onExternalDataDialogClose) {
+                options.onExternalDataDialogClose.call();
+            }
+        });
+
+
+
         if(data.form_data_required) {
             mw.$(form).on('submit', function (e) {
+
+
+
+
                 e.preventDefault();
                 var exdata = mw.serializeFields(this);
 
@@ -49,11 +78,14 @@ mw.extradataForm = function (options, data) {
                     options.data[i] = exdata[i];
                 }
 
-                console.log(options)
+                if(options.data.captcha){
+                   // mw.top().
+                   // ('data-captcha-value')
+                }
 
                 mw.ajax(options);
                 form.__modal.remove();
-            })
+            });
         }
     });
 };

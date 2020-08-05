@@ -46,6 +46,8 @@ mw.html_editor.get_edit_fields = function (also_in_modules, root_element_selecto
             fields_arr.push(this);
         }
     });
+
+
     return fields_arr;
 };
 
@@ -65,7 +67,7 @@ mw.html_editor.createItemContent = function (option) {
         frame.scrolling = 'no';
         setTimeout(function () {
             frame.contentDocument.body.innerHTML = option.el.innerHTML;
-            var root = window.top.opener ? window.top.opener.document.documentElement : window.top.document.documentElement;
+            var root = mw.top().win.opener ? mw.top().win.opener.document.documentElement : mw.top().win.document.documentElement;
             $('link', root).each(function () {
                 $(this).clone(true).appendTo(frame.contentDocument.body);
             });
@@ -79,7 +81,8 @@ mw.html_editor.build_dropdown = function (fields_array, screenShot) {
     $(fields_array).each(function () {
         var dd_grp = $(this).attr('rel');
         var dd_field = $(this).attr('field');
-        if (dd_grp && dd_grp) {
+
+        if (dd_grp) {
             if (typeof(html_dd[dd_grp]) == 'undefined') {
                 html_dd[dd_grp] = [];
             }
@@ -147,10 +150,10 @@ mw.html_editor.build_dropdown = function (fields_array, screenShot) {
 mw.html_editor.populate_editor = function () {
     var value = $('#select_edit_field li.selected');
 
-    if (value.length == 0) {
-        var value = $('select#select_edit_field li li').eq(0);
+    if (!value.length) {
+        value = $('select#select_edit_field li li').eq(0);
     }
-    if (value.length == 0) {
+    if (!value.length) {
         return;
     }
 
@@ -163,10 +166,11 @@ mw.html_editor.populate_editor = function () {
     if (typeof(mw.html_editor.map[dd_grp + '/' + dd_field]) != 'undefined') {
 
 
-        var ed_val = $(mw.html_editor.map[dd_grp + '/' + dd_field].el).html();
+        ed_val = $(mw.html_editor.map[dd_grp + '/' + dd_field].el).html();
 
-
-        wroot.mw.tools.scrollTo('[field="' + dd_field + '"][rel="' + dd_grp + '"]')
+        if(wroot.mw === mw.top()) {
+            wroot.mw.tools.scrollTo('[field="' + dd_field + '"][rel="' + dd_grp + '"]')
+        }
 
         wroot.$('.html-editor-selcted').removeClass('html-editor-selcted');
         wroot.$('[field="' + dd_field + '"][rel="' + dd_grp + '"]').addClass('html-editor-selcted');
@@ -236,13 +240,21 @@ mw.html_editor.populate_editor = function () {
 
 
 mw.html_editor.apply_and_save = function () {
-    mw.tools.loading('#module-id-mw_global_html_editor', true);
+
 
     mw.html_editor.apply();
-    wroot.mw.drag.save(undefined, function () {
-        mw.tools.loading('#module-id-mw_global_html_editor', false);
-        mw.notification.success(mw.msg.saved)
-    })
+    if(wroot.mw.drag.save) {
+        mw.tools.loading('#module-id-mw_global_html_editor', true);
+        wroot.mw.drag.save(undefined, function () {
+            mw.tools.loading('#module-id-mw_global_html_editor', false);
+            mw.notification.success(mw.msg.saved)
+        })
+    }
+    var form = wroot.mw.top().$('#quickform-edit-content');
+    if(form.length) {
+        form.submit()
+    }
+
 }
 mw.html_editor.apply = function () {
     var cur = $('#custom_html_code_mirror').attr('current');
@@ -359,10 +371,12 @@ mw.html_editor.reset_content = function (also_reset_modules) {
             childs_arr[i] = some_child;
         });
 
+        var childs_arr_data = {'reset':childs_arr};
+
 
         //if (childs_arr.length) {
 
-        $.post(mw.settings.api_url + "content/reset_edit", childs_arr);
+        $.post(mw.settings.api_url + "content/reset_edit", childs_arr_data);
 
         //}
 

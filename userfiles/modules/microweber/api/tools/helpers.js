@@ -64,10 +64,10 @@
             if(window.thismodal && thismodal.iframe) {
                 mw.tools.iframeAutoHeight(thismodal.iframe, 'now');
             }
-            else if(window.top.frameElement && window.top.frameElement.contentWindow === window) {
-                mw.tools.iframeAutoHeight(window.top.frameElement, 'now');
+            else if(mw.top().win.frameElement && mw.top().win.frameElement.contentWindow === window) {
+                mw.tools.iframeAutoHeight(mw.top().win.frameElement, 'now');
             } else if(window.top !== window) {
-                top.mw.$('iframe').each(function(){
+                mw.top().$('iframe').each(function(){
                     try{
                         if(this.contentWindow === window) {
                             mw.tools.iframeAutoHeight(this, 'now');
@@ -101,6 +101,7 @@
             tempInput.select();
             document.execCommand("copy");
             document.body.removeChild(tempInput);
+            mw.notification.success(mw.lang('Copied') + ': "' + value + '"');
         },
         cloneObject: function (object) {
             return jQuery.extend(true, {}, object);
@@ -184,13 +185,14 @@
                 ins.appendChild(style);
             }
             style.innerHTML = css;
+            return style;
         },
         cssNumber: function (val) {
             var units = ["px", "%", "in", "cm", "mm", "em", "ex", "pt", "pc"];
             if (typeof val === 'number') {
                 return val + 'px';
             }
-            else if (typeof val === 'string' && parseFloat(val).toString() == val) {
+            else if (typeof val === 'string' && parseFloat(val).toString() === val) {
                 return val + 'px';
             }
             else {
@@ -281,10 +283,11 @@
             });
         },
         accordion: function (el, callback) {
+            mw.require('css_parser.js');
             var speed = 200;
             var container = el.querySelector('.mw-accordion-content');
             if (container === null) return false;
-            var is_hidden = mw.CSSParser(container).get.display() == 'none';
+            var is_hidden = mw.CSSParser(container).get.display() === 'none';
             if (!$(container).is(":animated")) {
                 if (is_hidden) {
                     mw.$(container).slideDown(speed, function () {
@@ -340,23 +343,43 @@
         toCamelCase: function (str) {
             return str.replace(/(\-[a-z])/g, function (a) {
                 return a.toUpperCase().replace('-', '');
-            })
+            });
         },
         multihover: function () {
             var l = arguments.length, i = 1;
             var type = arguments[0].type;
             var check = ( type === 'mouseover' || type === 'mouseenter');
-            for (; i < l; i++) {
+            for ( ; i < l; i++ ) {
                 check ? mw.$(arguments[i]).addClass('hovered') : mw.$(arguments[i]).removeClass('hovered');
             }
         },
-        search: function (string, selector, callback) {
+        listSearch: function (val, list) {
+            val = val.trim().toLowerCase();
+            if(!val) {
+                $('li', list).show();
+                return;
+            }
+            this.search(val, 'li', function (found) {
+                if(found) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+
+            }, list);
+        },
+        search: function (string, selector, callback, root) {
+            root = !!root ? $(root)[0] : mwd;
+            if (!root) {
+                return;
+            }
             string = string.toLowerCase();
+            var items;
             if (typeof selector === 'object') {
-                var items = selector;
+                items = selector;
             }
             else if (typeof selector === 'string') {
-                var items = mwd.querySelectorAll(selector);
+                items = root.querySelectorAll(selector);
             }
             else {
                 return false;

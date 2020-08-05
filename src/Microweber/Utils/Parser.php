@@ -394,9 +394,9 @@ class Parser
                             //$layout = $this->_str_replace_first($key, $this->mw_replaced_modules_values[$replace_key2], $layout);
                             continue;
                         }
-                        
 
-                        
+
+
                         if ($value != '') {
 
                             $mw_attrs_key_value_seperator = "__MW_PARSER_ATTR_VAL__";
@@ -442,7 +442,9 @@ class Parser
                             $m_tag = rtrim($m_tag);
                             $userclass = '';
 
-                            $module_html = "<div class='__USER_DEFINED_CLASS__ __MODULE_CLASS__ __WRAP_NO_WRAP__' __MODULE_ID__ __MODULE_NAME__";
+                            $module_html_tag = 'div';
+
+                            $module_html = "<__MODULE_HTML_TAG__ class='__USER_DEFINED_CLASS__ __MODULE_CLASS__ __WRAP_NO_WRAP__' __MODULE_ID__ __MODULE_NAME__";
 
                             $module_has_class = false;
                             if (!empty($attrs)) {
@@ -779,22 +781,27 @@ class Parser
                                     $module_name_url = $this->app->url_manager->slug($module_name);
 
                                     if ($mod_as_element == false) {
-                                        if (strstr($module_name, 'text')) {
-                                            $module_html = str_replace('__MODULE_CLASS__', 'layout-element ' . $module_name_url, $module_html);
+                                        if ($module_name == 'text' or $module_name == 'title' or $module_name == 'text/empty_element' or $module_name == 'text/multiple_columns') {
+                                             $module_html = str_replace('__MODULE_CLASS__', 'layout-element ' . $module_name_url, $module_html);
                                         } else {
                                             $module_html = str_replace('__MODULE_CLASS__', 'module ' . $module_class, $module_html);
                                         }
-                                    } else {
-                                        $module_html = str_replace('__MODULE_CLASS__', 'element ' . $module_name_url, $module_html);
-                                    }
+                                        $userclass = str_replace(trim($module_class), '', $userclass);
+                                        $userclass = trim(str_replace(' -module ', 'module ', $userclass));
+                                        $userclass = trim(str_replace(' module ', ' ', $userclass));
+                                        $userclass = trim(str_replace(' disabled module ', ' module ', $userclass));
+                                        $module_class = trim(str_replace(' disabled module ', ' module ', $module_class));
+                                        $userclass = trim(str_replace(' module module ', ' module ', $userclass));
+                                        $userclass = trim(str_replace('module module ', 'module ', $userclass));
+                                        $module_html = str_replace('__MODULE_CLASS_NAME__', '' . $module_class, $module_html);
+                                       // $module_html = str_replace('__USER_DEFINED_CLASS__', $userclass, $module_html);
 
-                                    $userclass = str_replace(trim($module_class), '', $userclass);
-                                    $userclass = trim(str_replace(' module ', ' ', $userclass));
-                                    $userclass = trim(str_replace(' disabled module ', ' module ', $userclass));
-                                    $module_class = trim(str_replace(' disabled module ', ' module ', $module_class));
-                                    $userclass = trim(str_replace(' module module ', ' module ', $userclass));
-                                    $userclass = trim(str_replace('module module ', 'module ', $userclass));
-                                    $module_html = str_replace('__MODULE_CLASS_NAME__', '' . $module_class, $module_html);
+                                    } else {
+                                        $userclass = trim(str_replace(' -module ', '', $userclass));
+
+                                        $module_html = str_replace('__MODULE_CLASS__', 'element ' . $module_name_url, $module_html);
+                                        $mod_no_wrapper = true;
+                                    }
                                     $module_html = str_replace('__USER_DEFINED_CLASS__', $userclass, $module_html);
 
                                     if ($coming_from_parent == false) {
@@ -858,7 +865,11 @@ class Parser
                                     $this->_current_parser_module_of_type[$par_id_mod_count][$module_name]++;
 
                                     $mod_content = $this->load($module_name, $attrs);
+                                    if($this->current_module and isset($this->current_module['settings'] ) and isset($this->current_module['settings']['html_tag']) and $this->current_module['settings']['html_tag']){
+                                        $module_html_tag = $this->current_module['settings']['html_tag'];
+                                    }
 
+//
 
                                     $plain_modules = mw_var('plain_modules');
 
@@ -952,7 +963,12 @@ class Parser
                                     if ($mod_no_wrapper == false) {
                                         $coming_from_parent_str = '';
 
-                                        $module_html .= $coming_from_parent_str . '>' . $mod_content . '</div>';
+                                        $module_html .= $coming_from_parent_str . '>' . $mod_content . '</__MODULE_HTML_TAG__>';
+
+
+                                        $module_html = str_replace('__MODULE_HTML_TAG__', $module_html_tag, $module_html);
+
+
                                     } else {
 
 
@@ -1322,7 +1338,6 @@ class Parser
 
                         if ($field != 'content' and $field != 'content_body' and $field != 'title') {
                             $data[$field] = $this->app->content_manager->edit_field("rel_type={$rel}&field={$field}&rel_id=" . $data_id);
-                            // d($data);
                         }
                     } elseif ($rel == 'global') {
                         $get_global = 1;
@@ -1345,6 +1360,7 @@ class Parser
                     }*/
                     $cf = false;
                     $field_content = false;
+                    $field_content_modified_date = false;
                     $orig_rel = $rel;
 
 
@@ -1413,6 +1429,7 @@ class Parser
                         }
 
 
+
                     }
                     if ($rel == 'global') {
                         $field_content = false;
@@ -1442,15 +1459,19 @@ class Parser
                     if ($use_id_as_field != false) {
                         if (isset($data[$use_id_as_field])) {
                             $edit_field_content = $data[$use_id_as_field];
+
                         }
                     }
                     if (!$edit_field_content) {
                         if (isset($cont_field['value'])) {
                             $edit_field_content = $cont_field['value'];
-
                         }
                     }
 
+
+                    if(isset($data['updated_at'])){
+                        $field_content_modified_date  = $data['updated_at'];
+                     }
 
                     $this->_current_parser_rel = $rel;
 
@@ -1468,6 +1489,7 @@ class Parser
 
                     if ($edit_field_content) {
                         $field_content = $edit_field_content;
+
                     }
                     if ($field_content != false and $field_content != '' and is_string($field_content)) {
 
@@ -1511,6 +1533,14 @@ class Parser
                                     }
                                 } else {
                                     pq($elem_clone)->html($field_content);
+                                }
+
+                                if($field_content_modified_date and $this->app->user_manager->is_admin()){
+                                    pq($elem_clone)->attr('itemprop','dateModified');
+                                    pq($elem_clone)->attr('content',date("Y M d",strtotime($field_content_modified_date)));
+                                  //  pq($elem_clone)->attr('itemscope','');
+                                  //  pq($elem_clone)->attr('itemtype','http://schema.org/CreativeWork');
+
                                 }
                                 pq($elem)->replaceWith($elem_clone);
 
@@ -2145,7 +2175,9 @@ class Parser
 
 
             $installed_module = $this->app->modules->get('single=1&ui=any&module=' . $module_name);
-
+            if($installed_module and isset($installed_module['settings'])){
+                $config['settings']  = $installed_module['settings'];
+            }
 
 //            $is_installed = $this->app->modules->is_installed($module_name);
 //

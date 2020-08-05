@@ -8,13 +8,18 @@ mw.AfterDrop = function(){
         var all = mw.$(".edit .module-item"), count = 0;
         all.each(function(c) {
             (function (el) {
-                var parent = el.parentNode
+                var parent = el.parentNode;
                 var xhr = mw._({
                     selector: el,
                     done: function(module) {
                         mw.drag.fancynateLoading(module);
                         mw.pauseSave = false;
                         mw.wysiwyg.init_editables();
+                        if(mw.liveEditDomTree) {
+                            mw.liveEditDomTree.refresh(parent);
+                            mw.liveEditDomTree.select(parent);
+
+                        }
                     },
                     fail:function () {
                         mw.$(this).remove();
@@ -167,13 +172,13 @@ mw.ElementAnalyzer = function(options){
         var edit = mw.tools.firstParentOrCurrentWithAnyOfClasses(node, this.cls.edit);
         return (case1 || case2) && !mw.tools.hasClass(edit, this.cls.noDrop);
     };
-    this._canDrop = function(node){
+    this._canDrop = function(node) {
         node = node || this.data.target;
         return mw.tools.parentsOrCurrentOrderMatchOrOnlyFirstOrNone(node, [this.cls.allowDrop, this.cls.noDrop]);
     };
 
-    this._layoutInLayout = function(){
-        if(!this.data.currentGrabbed || !mwd.body.contains(this.data.currentGrabbed)){
+    this._layoutInLayout = function() {
+        if (!this.data.currentGrabbed || !mwd.body.contains(this.data.currentGrabbed)) {
             return false;
         }
         var currentGrabbedIsLayout = (this.data.currentGrabbed.getAttribute('data-module-name') === 'layouts' || mw.dragCurrent.getAttribute('data-type') === 'layouts');
@@ -185,9 +190,9 @@ mw.ElementAnalyzer = function(options){
     };
 
     this.canDrop = function(node){
-            node = node || this.data.target;
-            var can = (this._isEditLike(node) && this._canDrop(node) && !this._layoutInLayout().result);
-            return can;
+        node = node || this.data.target;
+        var can = (this._isEditLike(node) && this._canDrop(node) && !this._layoutInLayout().result);
+        return can;
     };
 
 
@@ -382,6 +387,9 @@ mw.ElementAnalyzer = function(options){
     };
     this.validateInteractionTarget = function(node){
         node = node || this.data.target;
+        if (!mw.tools.firstParentOrCurrentWithClass(node, this.cls.edit)) {
+           return false;
+        }
         var cls = [
             this.cls.edit,
             this.cls.element,
@@ -423,7 +431,7 @@ mw.ElementAnalyzer = function(options){
                 need_re_init = true;
             })(this);
         });
-        if (mw.have_new_items == true) {
+        if (mw.have_new_items === true) {
             need_re_init = true;
         }
         mw.have_new_items = false;
@@ -442,10 +450,9 @@ mw.ElementAnalyzer = function(options){
         if(!t){
             return;
         }
-        if(this.canDrop(t)) {
+        if (this.canDrop(t)) {
             return t;
-        }
-        else{
+        } else {
             return this.redirect(t);
         }
     };
@@ -502,6 +509,14 @@ mw.ElementAnalyzer = function(options){
 
             var el = mw.$(scope.data.target);
             mw.currentDragMouseOver = scope.data.target;
+
+            var edit = mw.tools.firstParentOrCurrentWithClass(mw.currentDragMouseOver, 'edit');
+            mw.tools.classNamespaceDelete(mw.dropable[0], 'mw-dropable-tagret-rel-');
+            if(edit) {
+                mw.tools.addClass(mw.dropable[0], 'mw-dropable-tagret-rel-' + edit.getAttribute('rel'));
+                var rel = edit.getAttribute('rel');
+                mw.tools.addClass(mw.dropable[0], 'mw-dropable-tagret-rel-' + rel);
+            }
 
             mw.dropables.set(scope.data.dropablePosition, el.offset(), el.height(), el.width());
 

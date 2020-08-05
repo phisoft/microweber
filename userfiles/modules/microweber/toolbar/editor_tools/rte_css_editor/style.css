@@ -354,10 +354,27 @@ input,select{
 
 
 
+#domtree .ui-resizable-s:after{
+    content: '...';
+    color: #a4a4a4;
+    font-size: 17px;
+    line-height: 3px;
+}
+#domtree .ui-resizable-s{
+    position: sticky;
+    background-color: #eee;
+    text-align: center;
+    height: 12px;
+    bottom: 0;
+}
 #domtree{
     max-height: 220px;
     overflow-x: hidden;
     overflow-y: auto;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .mw-domtree li.hover > span{
@@ -376,6 +393,18 @@ input,select{
 }
 .mw-domtree .expand > ul{
     display: block;
+}
+
+.mw-domtree-item-label .mw_module_settings_sidebar_icon {
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    position: relative;
+    width: 19px;
+    height: 19px;
+    margin: 0 5px 0 0;
+    display: inline-block;
+    vertical-align: middle;
 }
 
 .mw-domtree-item-label{

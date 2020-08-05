@@ -61,9 +61,9 @@ $here = mw_includes_url() . 'toolbar/editor_tools/plupload/';
         });
         var multi = (Params.multiple == 'true');
         var filters = [
-            {title: "", extensions: Params.filters}
-        ]
-        this_frame = parent.mw.$("iframe[name='" + Name + "']");
+            {title: "", extensions: Params.filters || '*'}
+        ];
+         this_frame = parent.mw.$("iframe[name='" + Name + "']");
         uploader = new plupload.Uploader({
             runtimes: 'html5',
             browse_button: 'pickfiles_<?php print $uid  ?>',
@@ -88,8 +88,9 @@ $here = mw_includes_url() . 'toolbar/editor_tools/plupload/';
 
         }
         uploader.init();
-        uploader.bind('FilesAdded', function (up, files) {
+         uploader.bind('FilesAdded', function (up, files) {
             this_frame.trigger("FilesAdded", [files]);
+
             if (Params.autostart != 'false') {
                 uploader.start();
                 $(mwd.body).addClass("loading");

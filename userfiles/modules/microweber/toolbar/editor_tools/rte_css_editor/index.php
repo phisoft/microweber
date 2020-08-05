@@ -2,7 +2,8 @@
 
 
 
-<div id="tree"></div>
+<div id="xtree"></div>
+<div id="domtree"></div>
 
 <script type="text/javascript">
     //parent.mw.require("external_callbacks.js");
@@ -17,13 +18,20 @@
     mw.require('tree.js');
 
     mw.require('domtree.js');
+
+
+
+
+    mw.require('css_parser.js');
+    mw.lib.require('colorpicker');
+
+
     $(window).on('load', function () {
 
-
-      /*  setTimeout(function() {
-
+       setTimeout(function() {
             mw.top().liveEditDomTree = new mw.DomTree({
                 element: '#domtree',
+                resizable:true,
                 targetDocument: mw.top().win.document,
                 onHover: function (e, target, node, element) {
                     mw.top().liveEditSelector.setItem(node, mw.top().liveEditSelector.interactors, false);
@@ -31,11 +39,12 @@
                 onSelect: function (e, target, node, element) {
                     setTimeout(function () {
                         mw.top().liveEditSelector.select(node);
+
+                        mw.top().tools.scrollTo(node, undefined, (mw.top().$('#live_edit_toolbar').height() + 10))
                     })
                 }
             });
-        }, 1111)*/
-
+        }, 700);
     })
 
 </script>
@@ -55,12 +64,13 @@ var reset = function(){
         value: "reset"
     };
 
-    top.$.post(mw.settings.api_url + "current_template_save_custom_css", data, function(data){
+    mw.top().$.post(mw.settings.api_url + "current_template_save_custom_css", data, function(data){
         mw.notification.success('Element styles restored');
         mw.tools.refresh(top.document.querySelector('link[href*="live_edit.css"]'))
     }).fail(function(){
 
     });
+    mw.top().wysiwyg.change(ActiveNode)
 };
 
 
@@ -160,7 +170,7 @@ var activeTree = function(){
     $(_activeTree).on('selectionChange', function(e, data){
         _pauseActiveTree = true;
         if(data[0]){
-            top.mw.liveEditSelector.select(data[0].element);
+            mw.top().liveEditSelector.select(data[0].element);
         }
         setTimeout(function(){
             _pauseActiveTree = false;
@@ -251,6 +261,7 @@ var _prepare = {
 };
 var _populate = {
     margin: function(css){
+        if(!css || !css.get) return;
         var margin = css.get.margin(undefined, true);
         mw.$('.margin-top').val(parseFloat(margin.top));
         mw.$('.margin-right').val(parseFloat(margin.right));
@@ -318,10 +329,12 @@ var output = function(property, value){
         ActiveNode = mw.top().liveEditSelector.selected
     }
     if(ActiveNode) {
-          ActiveNode.style[property] = value;
+          // ActiveNode.style[property] = value;
+        mw.top().liveedit.cssEditor.temp(ActiveNode, property.replace( /([a-z])([A-Z])/g, '$1-$2' ).toLowerCase(), value)
+          //ActiveNode.style.setProperty(property, value);
           ActiveNode.setAttribute('staticdesign', true);
-          top.mw.wysiwyg.change(ActiveNode);
-          top.mw.liveEditSelector.positionSelected();
+          mw.top().wysiwyg.change(ActiveNode);
+          mw.top().liveEditSelector.positionSelected();
     }
 };
 
@@ -338,11 +351,11 @@ var init = function(){
     mw.$('.padding-top').on('input', function(){ output('paddingTop', numValue(this.value)) });
     mw.$('.padding-right').on('input', function(){ output('paddingRight', numValue(this.value)) });
     mw.$('.padding-bottom').on('input', function(){ output('paddingBottom', numValue(this.value)) });
-    mw.$('.padding-left').on('input', function(){ output('paddingrginLeft', numValue(this.value)) });
+    mw.$('.padding-left').on('input', function(){ output('paddingLeft', numValue(this.value)) });
 
     $('.text-align > span').on('click', function(){
         output('textAlign', this.dataset.value);
-        $('.text-align > .active').removeClass('active')
+        $('.text-align > .active').removeClass('active');
         $(this).addClass('active')
     });
     $(".colorField").each(function(){
@@ -414,20 +427,22 @@ mw.top().$(mw.top().liveEditSelector).on('select', function(e, nodes){
         });
         ( window.classes || initClasses() ).setData(clsdata)
     }
+
     if(ActiveNode){
         var can = ActiveNode.innerText === ActiveNode.innerHTML;
         mw.$('#text-mask')[can ? 'show' : 'hide']();
         mw.$('#text-mask-field')[0].checked = mw.tools.hasClass(ActiveNode, 'mw-bg-mask');
+        if(!mw.tools.parentsOrCurrentOrderMatchOrOnlyFirst(ActiveNode.parentNode, ['edit', 'module'])) {
+            $('#classtags-accordion').hide();
+        } else{
+            $('#classtags-accordion').show();
+        }
     }
 });
 
-
-
     $(document).ready(function(){
-
         mw.$('.mw-field input').attr('autocomplete', 'off')
-
-        top.$(top.mwd.body).on('mousedown touchstart', function(e){
+        mw.top().$(top.mwd.body).on('mousedown touchstart', function(e){
             var node = mw.tools.firstMatchesOnNodeOrParent(e.target, ['.element', '.module']);
             if( !node && !mw.tools.firstParentOrCurrentWithAnyOfClasses(e.target, ['mw-control-box', 'mw-defaults']) ){
                 ActiveNode = null;
@@ -455,8 +470,8 @@ mw.top().$(mw.top().liveEditSelector).on('select', function(e, nodes){
     });
 
     $(window).on('load', function () {
-        if(top.mw.liveEditSelector.selected[0]){
-            ActiveNode = top.mw.liveEditSelector.selected[0];
+        if(mw.top().liveEditSelector.selected[0]){
+            ActiveNode = mw.top().liveEditSelector.selected[0];
 
             var css = mw.CSSParser(ActiveNode);
             populate(css);
@@ -468,7 +483,7 @@ mw.top().$(mw.top().liveEditSelector).on('select', function(e, nodes){
                 mw.$('#text-mask-field')[0].checked = mw.tools.hasClass(ActiveNode, 'mw-bg-mask');
             }
         }
-        top.mw.liveEditSelector.positionSelected();
+        mw.top().liveEditSelector.positionSelected();
         setTimeout(function(){
             $(document.body).trigger('click')
         }, 400)
@@ -524,7 +539,7 @@ mw.top().$(mw.top().liveEditSelector).on('select', function(e, nodes){
                         cls.push(this.title);
                     });
                     ActiveNode.setAttribute('class', cls.join(' '))
-
+                    mw.top().wysiwyg.change(ActiveNode);
                 });
             }
             return window.classes;
@@ -537,7 +552,7 @@ mw.top().$(mw.top().liveEditSelector).on('select', function(e, nodes){
 
     </script>
 
-    <div data-mwcomponent="accordion" class="mw-ui-box mw-accordion">
+    <div data-mwcomponent="accordion" class="mw-ui-box mw-accordion" id="classtags-accordion">
         <div class="mw-ui-box-header mw-accordion-title"><?php _e("Attributes"); ?></div>
         <div class="mw-accordion-content mw-ui-box-content">
             <div class="mw-ui-field-holder">
@@ -715,6 +730,7 @@ mw.top().$(mw.top().liveEditSelector).on('select', function(e, nodes){
                     var $node = $(ActiveNode);
                     var action = val ? 'addClass' : 'removeClass';
                     $node[action]('mw-bg-mask');
+                    mw.top().wysiwyg.change($node[0]);
                 }
             </script>
             <div class="s-field-content">
@@ -749,7 +765,7 @@ mw.top().$(mw.top().liveEditSelector).on('select', function(e, nodes){
 
 
 
-    <div data-mwcomponent="accordion" class="mw-ui-box mw-accordion" id="size-box">
+    <div data-mwcomponent="accordion" class="mw-ui-box mw-accordion" id="size-box" style="display: none">
         <div class="mw-ui-box-header mw-accordion-title"><?php _e("Size"); ?></div>
         <div class="mw-accordion-content mw-ui-box-content">
             <div class="mw-esr-col">

@@ -4,6 +4,10 @@
     <module type="admin/modules/info"/>
 <?php endif; ?>
 
+<script>
+    mw.lib.require('colorpicker');
+</script>
+
 <div class="admin-side-content">
 
     <script type="text/javascript">
@@ -117,6 +121,12 @@ code:			'123456'
                         <label class="mw-ui-label"><?php _e('Panel Background Color'); ?>:</label>
                         <input type="text" id="bg-color" class="mw-ui-field backgroundColor" readonly="readonly" style="width:80px;<?php print (isset($settings['backgroundColor']) ? ' background:' . $settings['backgroundColor'] : ''); ?>"
                                value="<?php print (isset($settings['backgroundColor']) ? $settings['backgroundColor'] : ''); ?>">
+                    </div>
+
+                    <div class="mw-ui-field-holder">
+                        <label class="mw-ui-label"><?php _e('Panel Text Color'); ?>:</label>
+                        <input type="text" id="text-color" class="mw-ui-field textColor" readonly="readonly" style="width:80px;<?php print (isset($settings['textColor']) ? ' background:' . $settings['textColor'] : ''); ?>"
+                               value="<?php print (isset($settings['textColor']) ? $settings['textColor'] : ''); ?>">
                     </div>
 
                     <div class="mw-ui-field-holder">
@@ -390,6 +400,7 @@ code:			'123456'
                     data['Hotjar'] = {};
 
                     data['backgroundColor'] = item.querySelector('.backgroundColor').value;
+                    data['textColor'] = item.querySelector('.textColor').value;
                     data['cookiePolicyURL'] = item.querySelector('.cookiePolicyURL').value;
                     data['showLiveChatMessage'] = item.querySelector('input[name=showLiveChatMessage]:checked').value;
                     data['panelTogglePosition'] = item.querySelector('input[name=panelTogglePosition]:checked').value;
@@ -433,6 +444,14 @@ code:			'123456'
                 position: 'bottom-left',
                 onchange: function (color) {
                     $("#bg-color").val(color).css('background', color);
+                    cookies_settings.save();
+                }
+            });
+            text = mw.colorPicker({
+                element: '#text-color',
+                position: 'bottom-left',
+                onchange: function (color) {
+                    $("#text-color").val(color).css('background', color);
                     cookies_settings.save();
                 }
             });

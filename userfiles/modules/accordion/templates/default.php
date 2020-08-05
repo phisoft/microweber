@@ -1,4 +1,18 @@
 <?php
+
+/*
+
+  type: layout
+
+  name: Default
+
+  description: Default template
+
+
+*/
+
+?>
+<?php
 if ($json == false) {
     print lnotif(_e('Click to edit accordion', true));
 
@@ -15,8 +29,14 @@ if (isset($json) == false or count($json) == 0) {
     $(document).ready(function(){
         var root = $("#mw-accordion-module-<?php print $params['id'] ?>");
         $('.accordion__title', root).on('click', function(){
-            $('li.active', root).removeClass('active');
-            $(this).parent().addClass('active');
+            var el = $(this);
+            setTimeout(function(){
+                $('li.active', root).removeClass('active');
+                $(el).parent().addClass('active');
+            }, 100);
+
+
+
         })
     })
 

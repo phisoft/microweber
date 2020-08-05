@@ -20,12 +20,12 @@ $files[] = 'live_edit.js';
 $files[] = 'liveedit_widgets.js';
 $files[] = 'state.js';
 $files[] = 'selector.js';
+$files[] = 'icon_selector.js';
 
 // Liveedit
 
 $files[] = 'liveedit/modules.toolbar.js';
 $files[] = 'liveedit/drag.js';
-$files[] = 'liveedit/drop.regions.js';
 $files[] = 'liveedit/manage.content.js';
 $files[] = 'liveedit/toolbar.js';
 $files[] = 'liveedit/editors.js';
@@ -104,9 +104,11 @@ $(document).ready(function() {
     mw.liveedit.handleEvents();
     mw.liveedit.handleCustomEvents();
 
+    mw.liveedit.cssEditor = new mw.liveeditCSSEditor();
+
 });
 
-
+mw.require('stylesheet.editor.js');
 $(window).on("load", function() {
     mw.liveedit.initLoad();
 });
@@ -114,5 +116,7 @@ $(window).on("load", function() {
 $(window).on('resize', function() {
     mw.liveedit.toolbar.setEditor();
 });
+
+
 
 

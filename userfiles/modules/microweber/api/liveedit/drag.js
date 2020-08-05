@@ -578,6 +578,9 @@ mw.drag = {
                                 mw.liveEditState.record(rec);
                                 mw.$(mw.ea.data.target)[mw.ea.data.dropableAction](mw.ea.data.currentGrabbed);
 
+
+
+
                                 setTimeout(function(ed) {
                                     var nrec = {
                                         target: ed,
@@ -603,6 +606,9 @@ mw.drag = {
                         setTimeout(function() {
                             mw.drag.fix_placeholders();
                             mw.ea.afterAction();
+                            if(mw.liveEditDomTree) {
+                                mw.liveEditDomTree.refresh(mw.ea.data.target.parentNode)
+                            }
                         }, 40);
                         mw.dropable.hide();
 
@@ -835,7 +841,7 @@ mw.drag = {
         var src = mw.settings.site_url + "api/module?" + json2url(data1);
 
         if (type === 'modal') {
-            var modal = top.mw.tools.modal.frame({
+            var modal = mw.top().tools.modal.frame({
                 url: src,
                 width: 532,
                 height: 150,
@@ -921,6 +927,10 @@ mw.drag = {
         mw.$("[data-gramm_id]", data).removeAttr('data-gramm_id');
         mw.$("[data-gramm]", data).removeAttr('data-gramm');
         mw.$("[data-gramm_id]", data).removeAttr('data-gramm_id');
+        mw.$("grammarly-card", data).remove();
+        mw.$("grammarly-inline-cards", data).remove();
+        mw.$("grammarly-popups", data).remove();
+        mw.$("grammarly-extension", data).remove();
         return data.innerHTML;
     },
     saving: false,
@@ -944,7 +954,15 @@ mw.drag = {
             type: 'POST',
             url: mw.settings.api_url + 'save_edit',
             data: data,
-            dataType: "json"
+            dataType: "json",
+            success: function (saved_data) {
+                if(saved_data && saved_data.new_page_url && !mw.drag.DraftSaving){
+                    window.parent.mw.askusertostay = false;
+                    window.mw.askusertostay = false;
+                    window.location.href  = saved_data.new_page_url;
+
+                }
+            }
         });
 
         xhr.always(function() {
@@ -959,6 +977,9 @@ mw.drag = {
         mw.$('.element-active', doc).removeClass('element-active');
         mw.$('.disable-resize', doc).removeClass('disable-resize');
         mw.$('.mw-webkit-drag-hover-binded', doc).removeClass('mw-webkit-drag-hover-binded');
+        mw.$('.module-cat-toggle-Modules', doc).removeClass('module-cat-toggle-Modules');
+        mw.$('.mw-module-drag-clone', doc).removeClass('mw-module-drag-clone');
+        mw.$('-module', doc).removeClass('-module');
         mw.$('.empty-element', doc).remove();
         mw.$('.empty-element', doc).remove();
         mw.$('.edit .ui-resizable-handle', doc).remove();
@@ -1074,14 +1095,14 @@ mw.drag = {
     draftDisabled: false,
     save: function(data, success, fail) {
         mw.trigger('beforeSaveStart', data);
-        if (typeof saveStaticElementsStyles === 'function') {
-            saveStaticElementsStyles();
+        if (mw.liveedit.cssEditor) {
+            mw.liveedit.cssEditor.publishIfChanged();
         }
         if (mw.drag.saveDisabled) return false;
-        if(typeof(data) == 'undefined'){
+        if(!data){
             var body = mw.drag.parseContent().body,
-                edits = body.querySelectorAll('.edit.changed'),
-                data = mw.drag.collectData(edits);
+                edits = body.querySelectorAll('.edit.changed');
+            data = mw.drag.collectData(edits);
         }
 
 

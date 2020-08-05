@@ -147,7 +147,7 @@ class UserManager
             if (!isset($params['captcha'])) {
                 return array('error' => 'Please enter the captcha answer!');
             }
-            $validate_captcha = $this->app->captcha->validate($params['captcha'], null, false);
+            $validate_captcha = $this->app->captcha_manager->validate($params['captcha'], null, false);
             if (!$validate_captcha) {
                 return array('error' => 'Invalid captcha answer!', 'captcha_error' => true);
             }
@@ -264,6 +264,9 @@ class UserManager
 
             $this->app->event_manager->trigger('mw.user.login', $user_data);
             if ($ok && $redirect_after) {
+                if(is_ajax()){
+                    return ['success' => 'You are logged in!', 'redirect'=>$redirect_after];
+                }
                 return $this->app->url_manager->redirect($redirect_after);
             } elseif ($ok) {
                 $this->login_set_success_attempt($params);
@@ -656,7 +659,7 @@ class UserManager
                 );
 
             } else {
-                $validate_captcha = $this->app->captcha->validate($params['captcha']);
+                $validate_captcha = $this->app->captcha_manager->validate($params['captcha']);
                 if (!$validate_captcha) {
 
                     return array(
@@ -714,7 +717,9 @@ class UserManager
                     return array('error' => 'Password confirm does not mach password!');
                 }
             }
-
+            if ($email == false and $user != false) {
+                $email = $user;
+            }
             if ($email != false) {
 
 
@@ -1001,7 +1006,7 @@ class UserManager
         }
         if ($force == false) {
 
-            if (isset($params['id'])) {
+            if (!is_cli()) {
                 $validate_token = mw()->user_manager->csrf_validate($params);
 
                 if ($validate_token == false) {
@@ -1298,7 +1303,7 @@ class UserManager
         if (!isset($params['captcha'])) {
             return array('error' => 'Please enter the captcha answer!');
         } else {
-            $validate_captcha = $this->app->captcha->validate($params['captcha']);
+            $validate_captcha = $this->app->captcha_manager->validate($params['captcha']);
             if (!$validate_captcha) {
                 return array('error' => 'Invalid captcha answer!', 'captcha_error' => true);
             }
@@ -1383,7 +1388,7 @@ class UserManager
             if (!isset($params['captcha'])) {
                 return array('error' => 'Please enter the captcha answer!');
             } else {
-                $validate_captcha = $this->app->captcha->validate($params['captcha']);
+                $validate_captcha = $this->app->captcha_manager->validate($params['captcha']);
                 if ($validate_captcha == false) {
                     return array('error' => 'Invalid captcha answer!', 'captcha_error' => true);
                 }
@@ -1772,6 +1777,8 @@ class UserManager
 
         $data['table'] = $table;
         $data['exclude_shorthand'] = true;
+        $data['no_cache'] = 1;
+
         $get = $this->app->database_manager->get($data);
 
         return $get;

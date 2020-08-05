@@ -195,11 +195,19 @@ class ContentManagerCrud extends Crud
             $extra_data = true;
         }
 
- 
+         if (isset($params['filter-only-in-stock'])) {
+            $params['__query_get_only_in_stock'] = function ($query){
+                $query->whereIn('content.id', function ($subQuery)  {
+                    $subQuery->select('content_data.content_id');
+                    $subQuery->from('content_data');
+                    $subQuery->where('content_data.field_name', '=', 'qty');
+                    $subQuery->where('content_data.field_value', '!=','0');
+                });
+              };
+             unset($params['filter-only-in-stock']);
+         }
 
         $get = parent::get($params);
-
-
 
 
         if (isset($params['count']) or isset($params['single']) or isset($params['one']) or isset($params['data-count']) or isset($params['page_count']) or isset($params['data-page-count'])) {
@@ -222,6 +230,7 @@ class ContentManagerCrud extends Crud
                 }
                 if ($extra_data) {
                     $item['picture'] = get_picture($item['id']);
+                    $item['content_data'] = content_data($item['id']);
                 }
 
                 $data2[] = $item;
@@ -289,29 +298,40 @@ class ContentManagerCrud extends Crud
         if ($url == '') {
             $content = $this->app->content_manager->homepage();
         } else {
-           /* $get = array();
-            $get['url'] = $url;
-            $get['single'] = true;
+            /* $get = array();
+             $get['url'] = $url;
+             $get['single'] = true;
 
-            $content = $this->get($get);
+             $content = $this->get($get);
 
-            if(!$content){
-                $get = $this->app->event_manager->trigger('content.get_by_url.not_found', $get);
-                if (is_array($get) && isset($get[0])) {
-                    $content = $this->get($get[0]);
-                }
-            }*/
+             if(!$content){
+                 $get = $this->app->event_manager->trigger('content.get_by_url.not_found', $get);
+                 if (is_array($get) && isset($get[0])) {
+                     $content = $this->get($get[0]);
+                 }
+             }*/
 
-            $get = $this->app->event_manager->trigger('content.get_by_url', $url);
-            if (is_array($get) && isset($get[0])) {
+            $contentSlug = $url;
+            $pageSlug = $this->app->permalink_manager->slug($url, 'page');
+            $postSlug = $this->app->permalink_manager->slug($url, 'post');
+            if ($pageSlug) {
+                $contentSlug = $pageSlug;
+            }
+            if ($postSlug) {
+                $contentSlug = $postSlug;
+            }
+            
+            $get = $this->app->event_manager->trigger('app.content.get_by_url', $contentSlug);
+            if (is_array($get) && isset($get[0]) && !empty($get[0])) {
                 $content = $get[0];
             } else {
                 $get = array();
-                $get['url'] = $url;
+                $get['url'] = $contentSlug;
                 $get['single'] = true;
                 $content = $this->get($get);
             }
         }
+
         if (!empty($content)) {
             self::$precached_links[$link_hash] = $content;
             return $content;
@@ -481,6 +501,7 @@ class ContentManagerCrud extends Crud
         }
         $url_changed = false;
 
+
         if (isset($data['url']) != false and is_string($data['url'])) {
             $search_weird_chars = array('%E2%80%99',
                 '%E2%80%99',
@@ -578,6 +599,15 @@ class ContentManagerCrud extends Crud
                     $data_to_save['url'] = $data['url'];
                 }
             }
+
+            if (isset($data_to_save['url']) and strval($data_to_save['url']) != '') {
+                $check_cat_wth_slug = $this->app->category_manager->get_by_url($data_to_save['url']);
+                if($check_cat_wth_slug){
+                    $data_to_save['url'] = $data_to_save['url'] . '-' . $date123;
+                }
+            }
+
+
 
             if (isset($data_to_save['url']) and strval($data_to_save['url']) == '' and (isset($data_to_save['quick_save']) == false)) {
                 $data_to_save['url'] = $data_to_save['url'] . '-' . $date123;
@@ -1204,7 +1234,7 @@ class ContentManagerCrud extends Crud
         return $params;
     }
 
-    public function get_edit_field($data, $debug = false)
+    public function get_edit_field($data)
     {
         $table = $this->tables['content_fields'];
         $table_drafts = $this->tables['content_fields_drafts'];

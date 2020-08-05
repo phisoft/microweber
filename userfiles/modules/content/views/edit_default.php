@@ -52,7 +52,7 @@ if (isset($data['id']) and intval($data['id']) == 0 and isset($data['parent']) a
 if ($edit_page_info['is_shop'] == 1) {
     $type = 'Shop';
 } elseif ($edit_page_info['subtype'] == 'dynamic') {
-    $type = 'Dynamicpage';
+    $type = 'Dynamic page';
 } elseif ($edit_page_info['subtype'] == 'post') {
     $type = 'Post';
 } elseif ($edit_page_info['content_type'] == 'product') {
@@ -240,14 +240,22 @@ if (isset($params['quick_edit'])) {
                                                        id="content-title-field" <?php if ($edit_page_info['title'] == false): ?> placeholder="<?php print $action_text ?>"  <?php endif; ?> />
                                             </div>
 
+
                                             <script>
+
                                                 $(document).ready(function () {
-                                                    $(document).ready(function () {
-                                                        setTimeout(function () {
-                                                            $('#content-title-field').focus();
-                                                        }, 100);
-                                                    });
+                                                    setTimeout(function () {
+                                                        $('#content-title-field').focus();
+                                                        if(typeof(mw.adminPagesTree) != 'undefined') {
+                                                            mw.adminPagesTree.select({
+                                                                id:<?php print $edit_page_info['id']  ?>,
+                                                                type: 'page'
+                                                            })
+                                                        }
+                                                    }, 100);
+
                                                 });
+
                                             </script>
 
                                             <?php event_trigger('content.edit.title.after'); ?>
@@ -320,7 +328,15 @@ if (isset($params['quick_edit'])) {
                         <div class="edit-post-url">
                             <div class="mw-ui-row">
                                 <div class="mw-ui-col" id="slug-base-url-column">
-                                    <span class="view-post-site-url" id="slug-base-url"><?php print site_url(); ?></span>
+                                    <span class="view-post-site-url" id="slug-base-url">
+                                        <?php
+                                        if (isset($data['slug_prefix_url'])) {
+                                            echo $data['slug_prefix_url'];
+                                        } else {
+                                            echo site_url();
+                                        }
+                                        ?>
+                                    </span>
                                 </div>
 
                                 <div class="mw-ui-col" id="slug-url-column">

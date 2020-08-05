@@ -12,9 +12,13 @@
 
 
 
-mw.lib.require('nestedsortable');
-
 (function(){
+    mw.lib.require('jqueryui');
+
+    mw.lib.require('nestedsortable');
+
+
+
     var mwtree = function(config){
 
         var scope = this;
@@ -46,7 +50,9 @@ mw.lib.require('nestedsortable');
                 filter:false,
                 cantSelectTypes: [],
                 document: document,
-                _tempRender: true
+                _tempRender: true,
+                filterRemoteURL: null,
+                filterRemoteKey: 'keyword',
             };
 
             var options = $.extend({}, defaults, config);
@@ -67,7 +73,7 @@ mw.lib.require('nestedsortable');
                 this.selectedData = [];
             }
         };
-        this.filter = function(val, key){
+        this.filterLocal = function(val, key){
             key = key || 'title';
             val = (val || '').toLowerCase().trim();
             if(!val){
@@ -84,6 +90,30 @@ mw.lib.require('nestedsortable');
                 });
             }
         };
+
+        this._filterRemoteTime = null;
+        this.filterRemote = function(val, key){
+            clearTimeout(this._filterRemoteTime);
+            this._filterRemoteTime = setTimeout(function () {
+                key = key || 'title';
+                val = (val || '').toLowerCase().trim();
+                var ts = {};
+                ts[scope.options.filterRemoteKey] = val;
+                $.get(scope.options.filterRemoteURL, ts, function (data) {
+                    console.log(data)
+                    scope.setData(data);
+                });
+            }, 777);
+        };
+
+        this.filter = function(val, key){
+            if (!!this.options.filterRemoteURL && !!this.options.filterRemoteKey) {
+                this.filterRemote(val, key);
+            } else {
+                this.filterLocal(val, key);
+            }
+        };
+
         this.search = function(){
             this._seachInput = mw.$(this.options.searchInput);
             if(!this._seachInput[0] || this._seachInput[0]._tree) return;
@@ -202,7 +232,8 @@ mw.lib.require('nestedsortable');
 
         this.setData = function(newData){
             this.options.data = newData;
-            mw.$(this.list).remove();
+            this._postCreated = [];
+            this._ids = [];
             this.init();
         };
 
@@ -242,6 +273,7 @@ mw.lib.require('nestedsortable');
 
         this.analizeLi = function(li){
             if(typeof li === 'string'){
+                li = decodeURIComponent(li).trim();
                 if(/^\d+$/.test(li)){
                     li = parseInt(li, 10);
                 }
@@ -262,7 +294,7 @@ mw.lib.require('nestedsortable');
             li = this.get(li, type);
             if(li && this.options.cantSelectTypes.indexOf(li.dataset.type) === -1){
                 li.classList.add(this.options.selectedClass);
-                var input = mw.$(li.children).filter('.mw-tree-item-content').find('input')[0];
+                var input = li.querySelector('input');
                 if(input) input.checked = true;
             }
 
@@ -283,7 +315,7 @@ mw.lib.require('nestedsortable');
             li = this.get(li, type);
             if(li){
                 li.classList.remove(this.options.selectedClass);
-                var input = mw.$(li.children).filter('.mw-tree-item-content').find('input')[0];
+                var input = li.querySelector('input');
                 if(input) input.checked = false;
             }
             this.manageUnselected();
@@ -319,7 +351,7 @@ mw.lib.require('nestedsortable');
         this.isSelected = function(li, type){
             li = this.get(li, type);
             if(!li) return;
-            var input = mw.$(li.children).filter('.mw-tree-item-content').find('input')[0];
+            var input = li.querySelector('input');
             if(!input) return false;
             return input.checked === true;
         };
@@ -356,8 +388,7 @@ mw.lib.require('nestedsortable');
             li = this.get(li, type);
             if(!li) return;
             li.classList.add(this.options.openedClass);
-            mw.$(li.children).filter('mwbutton').addClass(this.options.openedClass);
-            if(!_skipsave) this.saveState()
+            if(!_skipsave) this.saveState();
         };
         this.show = function(li, type){
             if(Array.isArray(li)){
@@ -404,7 +435,6 @@ mw.lib.require('nestedsortable');
             li = this.get(li, type);
             if(!li) return;
             li.classList.remove(this.options.openedClass);
-            mw.$(li.children).filter('mwbutton').removeClass(this.options.openedClass);
             if(!_skipsave) this.saveState();
         };
 
@@ -412,7 +442,6 @@ mw.lib.require('nestedsortable');
             li = this.get(li, type);
             if(!li) return;
             li.classList.toggle(this.options.openedClass);
-            mw.$(li.children).filter('mwbutton').toggleClass(this.options.openedClass);
             this.saveState();
         };
 
@@ -436,7 +465,7 @@ mw.lib.require('nestedsortable');
             var btn = scope.document.createElement('mwbutton');
             btn.className = 'mw-tree-toggler';
             btn.onclick = function(){
-                scope.toggle(this.parentNode);
+                scope.toggle(mw.tools.firstParentWithTag(this, 'li'));
             };
             return btn;
         };
@@ -446,7 +475,7 @@ mw.lib.require('nestedsortable');
             for( ; i<all.length; i++ ){
                 var ul = all[i];
                 ul.classList.remove('pre-init');
-                mw.$(ul).parent().prepend(this.button());
+                mw.$(ul).parent().children('.mw-tree-item-content-root').prepend(this.button());
             }
         };
 
@@ -610,16 +639,20 @@ mw.lib.require('nestedsortable');
 
         this._ids = [];
 
+        this._createSingle = function (item) {
+
+        }
+
         this.createItem = function(item){
             var selector = '#'+scope.options.id + '-' + item.type+'-'+item.id;
             if(this._ids.indexOf(selector) !== -1) return false;
-            this._ids.push(selector)
+            this._ids.push(selector);
             var li = scope.document.createElement('li');
             li.dataset.type = item.type;
             li.dataset.id = item.id;
             li.dataset.parent_id = item.parent_id;
             var skip = this.skip(item);
-            li.className = 'type-' + item.type + ' subtype-'+ item.subtype + ' skip-' + skip;
+            li.className = 'type-' + item.type + ' subtype-'+ item.subtype + ' skip-' + (skip || 'none');
             var container = scope.document.createElement('span');
             container.className = "mw-tree-item-content";
             container.innerHTML = '<span class="mw-tree-item-title">'+item.title+'</span>';
@@ -627,6 +660,7 @@ mw.lib.require('nestedsortable');
             li._data = item;
             li.id = scope.options.id + '-' + item.type+'-'+item.id;
             li.appendChild(container);
+            $(container).wrap('<span class="mw-tree-item-content-root"></span>')
             if(!skip){
                 container.onclick = function(){
                     if(scope.options.selectable) scope.toggleSelect(li)
@@ -637,6 +671,41 @@ mw.lib.require('nestedsortable');
 
             return li;
         };
+
+
+
+        this.additional = function (obj) {
+            var li = scope.document.createElement('li');
+            li.className = 'mw-tree-additional-item';
+            var container = scope.document.createElement('span');
+            var containerTitle = scope.document.createElement('span');
+            container.className = "mw-tree-item-content";
+            containerTitle.className = "mw-tree-item-title";
+            container.appendChild(containerTitle);
+
+            li.appendChild(container);
+            $(container).wrap('<span class="mw-tree-item-content-root"></span>')
+            if(obj.icon){
+                if(obj.icon.indexOf('</') === -1){
+                    var icon = scope.document.createElement('span');
+                    icon.className = 'mw-tree-aditional-item-icon ' + obj.icon;
+                    containerTitle.appendChild(icon);
+                }
+                else{
+                    mw.$(containerTitle).append(obj.icon)
+                }
+
+            }
+            var title = scope.document.createElement('span');
+            title.innerHTML = obj.title;
+            containerTitle.appendChild(title);
+            li.onclick = function (ev) {
+                if(obj.action){
+                    obj.action.call(this, obj)
+                }
+            };
+            return li;
+        }
 
         this.createList = function(item){
             var nlist = scope.document.createElement('ul');
@@ -661,38 +730,6 @@ mw.lib.require('nestedsortable');
                 findli.appendChild(nlist);
                 return false;
             }
-        };
-
-
-        this.additional = function (obj) {
-            var li = scope.document.createElement('li');
-            li.className = 'mw-tree-additional-item';
-            var container = scope.document.createElement('span');
-            var containerTitle = scope.document.createElement('span');
-            container.className = "mw-tree-item-content";
-            containerTitle.className = "mw-tree-item-title";
-            container.appendChild(containerTitle);
-            li.appendChild(container);
-            if(obj.icon){
-                if(obj.icon.indexOf('</') === -1){
-                    var icon = scope.document.createElement('span');
-                    icon.className = obj.icon;
-                    containerTitle.appendChild(icon)
-                }
-                else{
-                    mw.$(containerTitle).append(obj.icon)
-                }
-
-            }
-            var title = scope.document.createElement('span');
-            title.innerHTML = obj.title;
-            containerTitle.appendChild(title);
-            li.onclick = function (ev) {
-                if(obj.action){
-                    obj.action.call(this, obj)
-                }
-            };
-            return li;
         };
 
         this.append = function(){

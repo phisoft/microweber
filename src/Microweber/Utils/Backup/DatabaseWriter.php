@@ -15,6 +15,7 @@ use Microweber\Utils\Backup\Traits\DatabaseMediaWriter;
 use Microweber\Utils\Backup\Loggers\BackupImportLogger;
 use Microweber\Utils\Backup\Traits\DatabaseModuleWriter;
 use Microweber\Utils\Backup\Traits\DatabaseTaggingTaggedWriter;
+use QueryPath\Exception;
 
 /**
  * Microweber - Backup Module Database Writer
@@ -53,7 +54,13 @@ class DatabaseWriter
 	 * @var string
 	 */
 	public $overwriteById = false;
-	
+
+    /**
+     * Delete old content
+     * @var bool
+     */
+	public $deleteOldContent = false;
+
 	/**
 	 * The content from backup file
 	 * @var string
@@ -91,7 +98,12 @@ class DatabaseWriter
 	public function setOverwriteById($overwrite) {
 		$this->overwriteById = $overwrite;
 	}
-	
+
+
+	public function setDeleteOldContent($delete) {
+	    $this->deleteOldContent = $delete;
+    }
+
 	/**
 	 * Unset item fields
 	 * @param array $item
@@ -107,7 +119,7 @@ class DatabaseWriter
 	
 	private function _saveItemDatabase($item) {
 		
-		if ($this->overwriteById  && isset($item['id'])) {
+		if ($this->overwriteById && isset($item['id'])) {
 			
 			// We will overwrite content by id from our db structure
 			$dbSelectParams = array();
@@ -240,9 +252,12 @@ class DatabaseWriter
 	 * @param array $item
 	 */
 	private function _saveItem($item) {
-		
+
 		$savedItem = $this->_saveItemDatabase($item);
-		
+        if ($this->overwriteById) {
+            return true; 
+        }
+
 		if ($savedItem) {
 			$this->_fixRelations($savedItem);
 			$this->_fixParentRelationship($savedItem);
@@ -276,8 +291,17 @@ class DatabaseWriter
 		
 		var_dump($items);
 		return; */
-		
+
+        if (isset($this->content->__table_structures)) {
+            app()->database_manager->build_tables($this->content->__table_structures);
+        }
+
 		foreach ($this->content as $table=>$items) {
+
+            if (!\Schema::hasTable($table)) {
+                continue;
+            }
+
 			if (!empty($items)) {
 				foreach($items as $item) {
 					$item['save_to_table'] = $table;
@@ -295,14 +319,19 @@ class DatabaseWriter
 	{
 		if ($this->getCurrentStep() == 0) {
 			BackupImportLogger::clearLog();
+			$this->_deleteOldContent();
 		}
-		
+
 		BackupImportLogger::setLogInfo('Importing database batch: ' . ($this->getCurrentStep() + 1) . '/' . $this->totalSteps);
 		
 		if (empty($this->content)) {
 			$this->_finishUp('runWriterWithBatchNothingToImport');
 			return array("success"=>"Nothing to import.");
 		}
+
+		if (isset($this->content->__table_structures)) {
+		    app()->database_manager->build_tables($this->content->__table_structures);
+        }
 		
 		//$importTables = array('users', 'categories', 'modules', 'comments', 'content', 'media', 'options', 'calendar', 'cart_orders');
 		//$importTables = array('content', 'categories');
@@ -311,7 +340,11 @@ class DatabaseWriter
 		// All db tables
 		$itemsForSave = array();
 		foreach ($this->content as $table=>$items) {
-			
+
+            if (!\Schema::hasTable($table)) {
+                continue;
+            }
+
 			if (in_array($table, $excludeTables)) {
 				continue;
 			}
@@ -382,6 +415,22 @@ class DatabaseWriter
 		
 		return $log;
 	}
+
+	private function _deleteOldContent()
+    {
+        // Delete old content
+        if (!empty($this->content) && $this->deleteOldContent) {
+            foreach ($this->content as $table=>$items) {
+                if ($table == 'users' || $table == 'users_oauth' || $table == 'system_licenses') {
+                    continue;
+                }
+                if (\Schema::hasTable($table)) {
+                    BackupImportLogger::setLogInfo('Truncate table: ' . $table);
+                    \DB::table($table)->truncate();
+                }
+            }
+        }
+    }
 	
 	/**
 	 * Clear all cache on framework
