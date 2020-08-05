@@ -14,8 +14,6 @@ description: Default Menu skin
 
 <script>mw.moduleCSS("<?php print $config['url_to_module']; ?>style.css", true);</script>
 
-
-
 <div class="module-navigation module-navigation-default">
       <?php
       $mt =  menu_tree($menu_filter, false, true);

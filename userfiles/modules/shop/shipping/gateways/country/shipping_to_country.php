@@ -305,7 +305,7 @@ class shipping_to_country
 
         if (isset($params['country'])) {
             $is_worldwide = false;
-            $active = $this->get('one=1&is_active=1&shipping_country=' . $params['country']);
+            $active = $this->get('one=1&is_active=1&shipping_country='.$params['country']);
             if (!is_array($active)) {
                 $active = $this->get('one=1&is_active=1&shipping_country=Worldwide');
                 if (is_array($active)) {
