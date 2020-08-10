@@ -101,6 +101,12 @@
         </script>
     <?php endif; ?>
     <?php event_trigger('admin_head'); ?>
+
+    <script src="//code.jquery.com/jquery-1.12.3.js"></script>
+    <script src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.12/js/dataTables.bootstrap.min.js"></script>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css">
 </head>
 <body class="is_admin loading view-<?php print mw()->url_manager->param('view'); ?> action-<?php print mw()->url_manager->param('action'); ?>">
 
@@ -569,48 +575,50 @@ if (!$shop_disabled) {
 
                     <?php endif; ?>
 
+                    
+
                     <li
-                        <?php if ($view == 'booking' and $action == false): ?>
+                        <?php if ($view == 'microweber-booking' and $action == false): ?>
                             class="active"
-                        <?php elseif ($view == 'booking' and $action != false): ?>
+                        <?php elseif ($view == 'microweber-booking' and $action != false): ?>
                             class="active-parent"
                         <?php endif; ?>>
                         
-                        <a href="<?php print admin_url(); ?>view:booking" title="">
+                        <a href="<?php print admin_url(); ?>view:microweber-booking" title="">
                             <span class="mai-edit"></span>
                             <strong>
                                 <?php _e("Booking"); ?>
                             </strong> </a>
                         <ul>
                             <li <?php if ($action == 'guests'): ?> class="active" <?php endif; ?>>
-                                <a href="<?php print admin_url(); ?>view:booking/action:guests">
+                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:guests">
                                     <span class="mai-user"></span>
                                     <strong><?php _e("Guests"); ?></strong>
                                 </a></li>
 
                             <li <?php if ($action == 'Bookings'): ?> class="active" <?php endif; ?>>
-                                <a href="<?php print admin_url(); ?>view:booking/action:Bookings">
+                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:Bookings">
                                     <span class="mai-page"></span>
                                     <strong><?php _e("Bookings"); ?></strong>
                                 </a>
                             </li>
 
                             <li <?php if ($action == 'Rooms'): ?> class="active" <?php endif; ?>>
-                                <a href="<?php print admin_url(); ?>view:booking/action:Rooms">
+                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:Rooms">
                                     <span class="mai-post"></span>
                                     <strong><?php _e("Rooms"); ?></strong>
                                 </a>
                             </li>
 
                             <li <?php if ($action == 'Addons'): ?> class="active" <?php endif; ?>>
-                                <a href="<?php print admin_url(); ?>view:booking/action:Addons">
+                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:Addons">
                                     <span class="mai-plus"></span>
                                     <strong> <?php _e("Addons"); ?></strong>
                                 </a>
                             </li>
 
-                            <li <?php if ($action == 'Setting'): ?> class="active" <?php endif; ?>>
-                                <a href="<?php print admin_url(); ?>view:booking/action:Setting">
+                            <li <?php if ($action == 'options'): ?> class="active" <?php endif; ?>>
+                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:options">
                                     <span class="mai-setting2"></span>
                                     <strong> <?php _e("Setting"); ?></strong>
                                 </a>

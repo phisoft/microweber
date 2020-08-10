@@ -44,5 +44,13 @@
   <p><span class="mw-ui-btn" onclick="mw.admin.mobileMessage(true, 'true')"><?php _e('Continue anyway'); ?></span></p>
 </div>
 
+<script>
+  $(document).ready(function() {
+    $('#peak_season').DataTable({
+      "paging":   false,
+    });
+} );
+ </script>
+
 </body>
 </html>
