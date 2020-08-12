@@ -5,6 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="robots" content="noindex">
+    
     <script type="text/javascript">
         if (!window.CanvasRenderingContext2D) {
             var h = "<div id='UnsupportedBrowserMSG'><h1><?php _e("Your a need better browser to run Microweber>"); ?></h1></div>"
@@ -101,12 +102,7 @@
         </script>
     <?php endif; ?>
     <?php event_trigger('admin_head'); ?>
-
-    <script src="//code.jquery.com/jquery-1.12.3.js"></script>
-    <script src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.12/js/dataTables.bootstrap.min.js"></script>
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css">
+    
 </head>
 <body class="is_admin loading view-<?php print mw()->url_manager->param('view'); ?> action-<?php print mw()->url_manager->param('action'); ?>">
 
@@ -596,22 +592,22 @@ if (!$shop_disabled) {
                                     <strong><?php _e("Guests"); ?></strong>
                                 </a></li>
 
-                            <li <?php if ($action == 'Bookings'): ?> class="active" <?php endif; ?>>
-                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:Bookings">
+                            <li <?php if ($action == 'bookings'): ?> class="active" <?php endif; ?>>
+                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:bookings">
                                     <span class="mai-page"></span>
                                     <strong><?php _e("Bookings"); ?></strong>
                                 </a>
                             </li>
 
-                            <li <?php if ($action == 'Rooms'): ?> class="active" <?php endif; ?>>
-                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:Rooms">
+                            <li <?php if ($action == 'rooms'): ?> class="active" <?php endif; ?>>
+                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:rooms">
                                     <span class="mai-post"></span>
                                     <strong><?php _e("Rooms"); ?></strong>
                                 </a>
                             </li>
 
-                            <li <?php if ($action == 'Addons'): ?> class="active" <?php endif; ?>>
-                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:Addons">
+                            <li <?php if ($action == 'addons'): ?> class="active" <?php endif; ?>>
+                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:addons">
                                     <span class="mai-plus"></span>
                                     <strong> <?php _e("Addons"); ?></strong>
                                 </a>
@@ -623,7 +619,7 @@ if (!$shop_disabled) {
                                     <strong> <?php _e("Setting"); ?></strong>
                                 </a>
                             </li>
-
+                            
                         </ul>
                     </li>
 
