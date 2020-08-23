@@ -1,0 +1,17 @@
+{
+  "name": "microweber-templates/dream",
+  "type": "microweber-template",
+  "description": "Dream",
+  "keywords": [
+    "microweber",
+    "ecommerce",
+    "dream"
+  ],
+  "homepage": "https://microweber.org/templates/microweber-templates/dream",
+  "license": "MIT",
+  
+  "target-dir": "dream",
+  "extra": {
+    "preview_url": "https://templates.microweber.com/dream/"
+  }
+}
