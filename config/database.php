@@ -1,6 +1,6 @@
 <?php return array (
   'fetch' => 8,
-  'default' => 'sqlite',
+  'default' => 'pgsql',
   'connections' => 
   array (
     'sqlite' => 
@@ -28,9 +28,9 @@
     array (
       'driver' => 'pgsql',
       'host' => 'localhost',
-      'database' => 'myhomeplex',
-      'username' => 'myhomeplex',
-      'password' => 'myhomeplex',
+      'database' => 'kawagnaturelodge',
+      'username' => 'phisoftware',
+      'password' => 'phisoftware',
       'charset' => 'utf8',
       'prefix' => '',
       'schema' => 'public',

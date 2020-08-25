@@ -5,6 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="robots" content="noindex">
+    
     <script type="text/javascript">
         if (!window.CanvasRenderingContext2D) {
             var h = "<div id='UnsupportedBrowserMSG'><h1><?php _e("Your a need better browser to run Microweber>"); ?></h1></div>"
@@ -101,6 +102,7 @@
         </script>
     <?php endif; ?>
     <?php event_trigger('admin_head'); ?>
+    
 </head>
 <body class="is_admin loading view-<?php print mw()->url_manager->param('view'); ?> action-<?php print mw()->url_manager->param('action'); ?>">
 
@@ -477,100 +479,150 @@ if (!$shop_disabled) {
                         </ul>
                     </li>
 
+
                     <?php if ($shop_disabled == false AND mw()->modules->is_installed('shop') == true): ?>
 
-                        <li
-                            <?php if ($view == 'shop' and $action == false): ?> class="active"
-                            <?php elseif ($view == 'shop' and $action != false): ?> class="active-parent"
-                            <?php elseif ($view == 'modules' and $load_module == 'shop__coupons'): ?> class="active"
-                            <?php endif; ?> >
-                            <a href="<?php print admin_url(); ?>view:shop" title="">
-                                <span class="mai-market2"></span>
-                                <strong><?php _e("Shop"); ?></strong>
-                                <?php if ($view != 'shop' and $notif_count > 0) {
-                                    print $order_notif_html;
-                                }; ?>
-                            </a>
-                            <ul>
+                    <li
+                        <?php if ($view == 'shop' and $action == false): ?> class="active"
+                        <?php elseif ($view == 'shop' and $action != false): ?> class="active-parent"
+                        <?php elseif ($view == 'modules' and $load_module == 'shop__coupons'): ?> class="active"
+                        <?php endif; ?> >
+                        <a href="<?php print admin_url(); ?>view:shop" title="">
+                            <span class="mai-market2"></span>
+                            <strong><?php _e("Shop"); ?></strong>
+                            <?php if ($view != 'shop' and $notif_count > 0) {
+                                print $order_notif_html;
+                            }; ?>
+                        </a>
+                        <ul>
 
 
-                                <li <?php if ($action == 'products'): ?> class="active" <?php endif; ?>>
-                                    <a href="<?php print admin_url(); ?>view:shop/action:products">
-                                        <span class="mai-product"></span>
-                                        <?php _e("Products"); ?>
-                                    </a>
-                                </li>
+                            <li <?php if ($action == 'products'): ?> class="active" <?php endif; ?>>
+                                <a href="<?php print admin_url(); ?>view:shop/action:products">
+                                    <span class="mai-product"></span>
+                                    <?php _e("Products"); ?>
+                                </a>
+                            </li>
 
-                                <li <?php if ($action == 'orders'): ?> class="active" <?php endif; ?>>
-                                    <a href="<?php print admin_url(); ?>view:shop/action:orders">
-                                        <span class="mai-shop"></span>
-                                        <?php _e("Orders"); ?>
-                                        <?php if ($view == 'shop') {
-                                            print $order_notif_html;
-                                        } ?>
+                            <li <?php if ($action == 'orders'): ?> class="active" <?php endif; ?>>
+                                <a href="<?php print admin_url(); ?>view:shop/action:orders">
+                                    <span class="mai-shop"></span>
+                                    <?php _e("Orders"); ?>
+                                    <?php if ($view == 'shop') {
+                                        print $order_notif_html;
+                                    } ?>
 
-                                    </a>
-                                </li>
-
-
-                                <li <?php if ($action == 'clients'): ?> class="active" <?php endif; ?>>
-                                    <a href="<?php print admin_url(); ?>view:shop/action:clients">
-                                        <span class="mai-user"></span>
-                                        <?php _e("Clients"); ?>
-                                    </a>
-                                </li>
+                                </a>
+                            </li>
 
 
-                                <li <?php if ($action == 'options'): ?> class="active" <?php endif; ?>>
-
-                                    <a href="<?php print admin_url(); ?>view:shop/action:options/">
-                                        <span class="mw-icon-web-settings" style="margin-top: 16px;"></span>
-                                        <?php _e("Shop settings"); ?>
-                                    </a>
-                                </li>
-                                <?php
-                                /*<li>
-                                    <a href="<?php print admin_url(); ?>view:shop/action:options/#?option=payment-methods">
-                                        <span class="mai-order"></span>
-                                        <?php _e("Payment methods"); ?>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="<?php print admin_url(); ?>view:shop/action:options/#?option=taxes">
-                                        <span class="mai-percent"></span>
-                                        <?php _e("Taxes"); ?>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="<?php print admin_url(); ?>view:shop/action:options/#?option=shipping">
-                                        <span class="mai-shipping"></span>
-                                        <?php _e("Shipping"); ?>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="<?php print admin_url(); ?>view:shop/action:options/#?option=email">
-                                        <span class="mai-mail"></span>
-                                        <?php _e("Email confirmation"); ?>
-                                    </a>
-                                </li>
+                            <li <?php if ($action == 'clients'): ?> class="active" <?php endif; ?>>
+                                <a href="<?php print admin_url(); ?>view:shop/action:clients">
+                                    <span class="mai-user"></span>
+                                    <?php _e("Clients"); ?>
+                                </a>
+                            </li>
 
 
-                                <li <?php if ($action == 'options'): ?> class="active" <?php endif; ?>>
+                            <li <?php if ($action == 'options'): ?> class="active" <?php endif; ?>>
 
-                                    <a href="<?php print admin_url(); ?>view:shop/action:options/#?option=other">
-                                        <span class="mai-options"></span>
-                                        <?php _e("Options"); ?>
-                                    </a>
-                                </li>*/
+                                <a href="<?php print admin_url(); ?>view:shop/action:options/">
+                                    <span class="mw-icon-web-settings" style="margin-top: 16px;"></span>
+                                    <?php _e("Shop settings"); ?>
+                                </a>
+                            </li>
+                            <?php
+                            /*<li>
+                                <a href="<?php print admin_url(); ?>view:shop/action:options/#?option=payment-methods">
+                                    <span class="mai-order"></span>
+                                    <?php _e("Payment methods"); ?>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?php print admin_url(); ?>view:shop/action:options/#?option=taxes">
+                                    <span class="mai-percent"></span>
+                                    <?php _e("Taxes"); ?>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?php print admin_url(); ?>view:shop/action:options/#?option=shipping">
+                                    <span class="mai-shipping"></span>
+                                    <?php _e("Shipping"); ?>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?php print admin_url(); ?>view:shop/action:options/#?option=email">
+                                    <span class="mai-mail"></span>
+                                    <?php _e("Email confirmation"); ?>
+                                </a>
+                            </li>
 
 
-                                ?>
+                            <li <?php if ($action == 'options'): ?> class="active" <?php endif; ?>>
 
+                                <a href="<?php print admin_url(); ?>view:shop/action:options/#?option=other">
+                                    <span class="mai-options"></span>
+                                    <?php _e("Options"); ?>
+                                </a>
+                            </li>*/
+                            ?>
+                        </ul>
+                    </li>
 
-                            </ul>
-                        </li>
                     <?php endif; ?>
 
+                    <?php if (mw()->modules->is_installed('microweber-booking') == true): ?>
+                    <li
+                        <?php if ($view == 'microweber-booking' and $action == false): ?>
+                            class="active"
+                        <?php elseif ($view == 'microweber-booking' and $action != false): ?>
+                            class="active-parent"
+                        <?php endif; ?>>
+                        
+                        <a href="<?php print admin_url(); ?>view:microweber-booking" title="">
+                            <span class="mai-edit"></span>
+                            <strong>
+                                <?php _e("Booking"); ?>
+                            </strong> </a>
+                        <ul>
+                            <li <?php if ($action == 'guests'): ?> class="active" <?php endif; ?>>
+                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:guests">
+                                    <span class="mai-user"></span>
+                                    <strong><?php _e("Guests"); ?></strong>
+                                </a></li>
+
+                            <li <?php if ($action == 'Bookings'): ?> class="active" <?php endif; ?>>
+                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:Bookings">
+                                    <span class="mai-page"></span>
+                                    <strong><?php _e("Bookings"); ?></strong>
+                                </a>
+                            </li>
+
+                            <li <?php if ($action == 'Rooms'): ?> class="active" <?php endif; ?>>
+                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:Rooms">
+                                    <span class="mai-post"></span>
+                                    <strong><?php _e("Rooms"); ?></strong>
+                                </a>
+                            </li>
+
+                            <li <?php if ($action == 'Addons'): ?> class="active" <?php endif; ?>>
+                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:Addons">
+                                    <span class="mai-plus"></span>
+                                    <strong> <?php _e("Addons"); ?></strong>
+                                </a>
+                            </li>
+
+                            <li <?php if ($action == 'options'): ?> class="active" <?php endif; ?>>
+                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:options">
+                                    <span class="mai-setting2"></span>
+                                    <strong> <?php _e("Setting"); ?></strong>
+                                </a>
+                            </li>
+
+                        </ul>
+                    </li>
+                   
+                    <?php endif; ?>
 
                     <li <?php if (
                     ($view == 'modules' AND $load_module != 'users' AND $load_module != 'shop__coupons')
