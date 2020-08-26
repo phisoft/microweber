@@ -592,21 +592,21 @@ if (!$shop_disabled) {
                                 </a></li>
 
                             <li <?php if ($action == 'Bookings'): ?> class="active" <?php endif; ?>>
-                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:Bookings">
+                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:bookings">
                                     <span class="mai-page"></span>
                                     <strong><?php _e("Bookings"); ?></strong>
                                 </a>
                             </li>
 
                             <li <?php if ($action == 'Rooms'): ?> class="active" <?php endif; ?>>
-                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:Rooms">
+                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:rooms">
                                     <span class="mai-post"></span>
                                     <strong><?php _e("Rooms"); ?></strong>
                                 </a>
                             </li>
 
                             <li <?php if ($action == 'Addons'): ?> class="active" <?php endif; ?>>
-                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:Addons">
+                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:addons">
                                     <span class="mai-plus"></span>
                                     <strong> <?php _e("Addons"); ?></strong>
                                 </a>
