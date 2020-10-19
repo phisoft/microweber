@@ -571,7 +571,9 @@ if (!$shop_disabled) {
 
                     <?php endif; ?>
 
-                    <?php if (mw()->modules->is_installed('microweber-booking') == true): ?>
+                    <?php 
+                        $booking_enabled = get_option('booking_enabled', 'booking') == 1;  
+                        if (mw()->modules->is_installed('microweber-booking') == true && $booking_enabled): ?>
                     <li
                         <?php if ($view == 'microweber-booking' and $action == false): ?>
                             class="active"
