@@ -600,10 +600,10 @@ if (!$shop_disabled) {
                                 </a>
                             </li>
 
-                            <li <?php if ($action == 'Rooms'): ?> class="active" <?php endif; ?>>
-                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:rooms">
+                            <li <?php if ($action == 'Packages'): ?> class="active" <?php endif; ?>>
+                                <a href="<?php print admin_url(); ?>view:microweber-booking/action:packages">
                                     <span class="mai-post"></span>
-                                    <strong><?php _e("Rooms"); ?></strong>
+                                    <strong><?php _e("Packages"); ?></strong>
                                 </a>
                             </li>
 

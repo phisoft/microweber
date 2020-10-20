@@ -1,6 +1,6 @@
 <?php return array (
   'fetch' => 8,
-  'default' => 'pgsql',
+  'default' => 'mysql',
   'connections' => 
   array (
     'sqlite' => 
@@ -16,9 +16,9 @@
     array (
       'driver' => 'mysql',
       'host' => 'localhost',
-      'database' => 'forge',
-      'username' => 'forge',
-      'password' => '',
+      'database' => 'kawagnaturelodge',
+      'username' => 'kawagnaturelodge',
+      'password' => 'kawagnaturelodge',
       'charset' => 'utf8',
       'collation' => 'utf8_unicode_ci',
       'prefix' => '',
